@@ -25,6 +25,12 @@ export interface MenuCategory {
   items: MenuItem[]
 }
 
+export interface MenuResponse {
+  tenant_name: string
+  primary_color: string
+  categories: MenuCategory[]
+}
+
 export interface OrderItem {
   menu_item_id: string
   quantity: number
@@ -40,7 +46,7 @@ export interface CreateOrderPayload {
   items: OrderItem[]
 }
 
-export async function getMenu(tenantSlug: string): Promise<MenuCategory[]> {
+export async function getMenu(tenantSlug: string): Promise<MenuResponse> {
   const res = await api.get(`/api/v1/public/${tenantSlug}/menu`)
   return res.data
 }
