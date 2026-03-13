@@ -123,6 +123,12 @@ export default function DashboardPage() {
             🍔 Menú
           </button>
           <button
+            onClick={() => router.push('/dashboard/config')}
+            className="text-sm text-gray-600 hover:text-orange-500 font-medium transition-colors"
+          >
+            ⚙️ Config
+          </button>
+          <button
             onClick={() => { removeToken(); router.push('/') }}
             className="text-sm text-gray-400 hover:text-red-500 transition-colors"
           >

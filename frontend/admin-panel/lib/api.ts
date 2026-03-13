@@ -81,3 +81,17 @@ export async function updateOrderStatus(id: string, status: string) {
 export async function deleteOrder(id: string) {
   await api.delete(`/api/v1/admin/orders/${id}`)
 }
+
+// Config
+export async function getTenantConfig() {
+  const res = await api.get('/api/v1/admin/config')
+  return res.data
+}
+
+export async function updateTenantConfig(data: {
+  whatsapp_number: string | null
+  callmebot_api_key: string | null
+}) {
+  const res = await api.patch('/api/v1/admin/config', data)
+  return res.data
+}
