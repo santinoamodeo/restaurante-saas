@@ -83,6 +83,15 @@ export async function deleteOrder(id: string) {
 }
 
 // Config
+export async function uploadItemImage(id: string, file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await api.post(`/api/v1/admin/menu/items/${id}/image`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return res.data
+}
+
 export async function getTenantConfig() {
   const res = await api.get('/api/v1/admin/config')
   return res.data

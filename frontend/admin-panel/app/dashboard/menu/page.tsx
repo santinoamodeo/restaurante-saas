@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getToken, removeToken } from '@/lib/auth'
 import {
@@ -12,6 +12,7 @@ import {
   createItem,
   updateItem,
   deleteItem,
+  uploadItemImage,
 } from '@/lib/api'
 
 interface Category {
@@ -38,6 +39,10 @@ export default function MenuPage() {
   const [items, setItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState<string>('')
+
+  // Image upload
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadingId, setUploadingId] = useState<string | null>(null)
 
   // Forms
   const [showCatForm, setShowCatForm] = useState(false)
@@ -129,6 +134,20 @@ export default function MenuPage() {
     setShowItemForm(true)
   }
 
+  function handleImageClick(itemId: string) {
+    setUploadingId(itemId)
+    fileInputRef.current?.click()
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !uploadingId) return
+    e.target.value = ''
+    await uploadItemImage(uploadingId, file)
+    setUploadingId(null)
+    await loadData()
+  }
+
   function resetItemForm() {
     setEditingItem(null)
     setItemForm({ name: '', description: '', price: '', is_available: true, order_index: 0 })
@@ -145,6 +164,13 @@ export default function MenuPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
       {/* Header */}
       <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -294,6 +320,28 @@ export default function MenuPage() {
               <div className="divide-y divide-gray-50">
                 {categoryItems.map(item => (
                   <div key={item.id} className="px-4 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {/* Thumbnail */}
+                      <button
+                        onClick={() => handleImageClick(item.id)}
+                        title="Subir imagen"
+                        className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 hover:border-orange-400 transition-colors"
+                      >
+                        {item.image_url ? (
+                          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="w-full h-full flex items-center justify-center text-gray-300 text-lg bg-gray-50">
+                            {uploadingId === item.id ? (
+                              <span className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
+                            ) : '📷'}
+                          </span>
+                        )}
+                        {uploadingId === item.id && item.image_url && (
+                          <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                            <span className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                      </button>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-800">{item.name}</span>
@@ -307,6 +355,7 @@ export default function MenuPage() {
                       <p className="text-sm font-bold text-orange-500 mt-0.5">
                         ${parseFloat(item.price).toLocaleString()}
                       </p>
+                    </div>
                     </div>
                     <div className="flex items-center gap-1 ml-3">
                       <button
