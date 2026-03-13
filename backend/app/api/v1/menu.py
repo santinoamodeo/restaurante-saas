@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -12,6 +12,7 @@ from app.schemas.menu import (
     MenuItemCreate, MenuItemUpdate, MenuItemResponse,
     CategoryWithItems
 )
+from app.services.cloudinary_service import upload_image
 import uuid
 
 router = APIRouter(tags=["menu"])
@@ -139,6 +140,32 @@ async def update_item(
     await db.commit()
     await db.refresh(item)
     return item
+
+@router.post("/admin/menu/items/{item_id}/image", response_model=MenuItemResponse)
+async def upload_item_image(
+    item_id: uuid.UUID,
+    file: UploadFile = File(...),
+    tenant: Tenant = Depends(get_current_tenant),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(MenuItem).where(MenuItem.id == item_id, MenuItem.tenant_id == tenant.id)
+    )
+    item = result.scalar_one_or_none()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item no encontrado")
+
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="El archivo debe ser una imagen")
+
+    file_bytes = await file.read()
+    public_id = f"{tenant.slug}-item-{item_id}"
+    item.image_url = await upload_image(file_bytes, public_id)
+
+    await db.commit()
+    await db.refresh(item)
+    return item
+
 
 @router.delete("/admin/menu/items/{item_id}")
 async def delete_item(
