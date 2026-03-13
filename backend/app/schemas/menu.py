@@ -58,3 +58,8 @@ class CategoryWithItems(BaseModel):
 
     class Config:
         from_attributes = True
+
+class PublicMenuResponse(BaseModel):
+    tenant_name: str
+    primary_color: str
+    categories: list[CategoryWithItems]

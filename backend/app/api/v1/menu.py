@@ -10,7 +10,7 @@ from app.models.tenant import Tenant
 from app.schemas.menu import (
     CategoryCreate, CategoryUpdate, CategoryResponse,
     MenuItemCreate, MenuItemUpdate, MenuItemResponse,
-    CategoryWithItems
+    CategoryWithItems, PublicMenuResponse
 )
 from app.services.cloudinary_service import upload_image
 import uuid
@@ -19,7 +19,7 @@ router = APIRouter(tags=["menu"])
 
 # ── Público (sin auth) ──────────────────────────────────────
 
-@router.get("/public/{tenant_slug}/menu", response_model=list[CategoryWithItems])
+@router.get("/public/{tenant_slug}/menu", response_model=PublicMenuResponse)
 async def get_public_menu(tenant_slug: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Tenant).where(Tenant.slug == tenant_slug))
     tenant = result.scalar_one_or_none()
@@ -33,7 +33,11 @@ async def get_public_menu(tenant_slug: str, db: AsyncSession = Depends(get_db)):
         .order_by(MenuCategory.order_index)
     )
     categories = result.scalars().all()
-    return categories
+    return PublicMenuResponse(
+        tenant_name=tenant.name,
+        primary_color=tenant.primary_color,
+        categories=categories,
+    )
 
 # ── Admin (con auth) ────────────────────────────────────────
 
