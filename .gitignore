@@ -28,3 +28,7 @@ Thumbs.db
 # Testing
 .pytest_cache/
 .coverage
+
+# Next.js
+frontend/public-web/.next/
+frontend/public-web/node_modules/
