@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/restaurante_saas"
+    DATABASE_URL_PROD: str | None = None
 
     SECRET_KEY: str = "cambia-esto-por-un-secreto-seguro"
     ALGORITHM: str = "HS256"
