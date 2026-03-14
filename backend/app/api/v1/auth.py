@@ -11,9 +11,10 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/login", response_model=TokenResponse)
 async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == data.email))
-    user = result.scalar_one_or_none()
+    user = result.scalar()
 
-    if not user or not verify_password(data.password, user.hashed_password):
+    if user is None or not verify_password(data.password, user.hashed_password):
+        print(f"[DEBUG login] email={data.email} | user_found={user is not None} | password_ok={user is not None and verify_password(data.password, user.hashed_password)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email o contraseña incorrectos"
@@ -27,7 +28,7 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
 
     token = create_access_token({
         "sub": str(user.id),
-        "tenant_id": str(user.tenant_id),
+        "tenant_id": str(user.tenant_id) if user.tenant_id else None,
         "role": user.role.value
     })
 
