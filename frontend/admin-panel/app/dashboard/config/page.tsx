@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getToken, removeToken } from '@/lib/auth'
-import { setAuthToken, getTenantConfig, updateTenantConfig } from '@/lib/api'
+import { setAuthToken } from '@/lib/api'
 
 export default function ConfigPage() {
   const router = useRouter()
@@ -12,144 +12,191 @@ export default function ConfigPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const token = getToken()
-    if (!token) {
-      router.push('/')
-      return
-    }
+    if (!token) { router.push('/'); return }
     setAuthToken(token)
     loadConfig()
   }, [])
 
   async function loadConfig() {
     try {
-      const data = await getTenantConfig()
-      setWhatsapp(data.whatsapp_number ?? '')
-      setApiKey(data.callmebot_api_key ?? '')
+      const { api } = await import('@/lib/api')
+      const res = await api.get('/api/v1/admin/config')
+      setWhatsapp(res.data.whatsapp_number || '')
+      setApiKey(res.data.callmebot_api_key || '')
     } catch {
-      removeToken()
-      router.push('/')
+      removeToken(); router.push('/')
     } finally {
       setLoading(false)
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setSaving(true)
-    setError(null)
-    setSaved(false)
+  async function handleSave() {
+    setSaving(true); setError(''); setSaved(false)
     try {
-      await updateTenantConfig({
-        whatsapp_number: whatsapp.trim() || null,
-        callmebot_api_key: apiKey.trim() || null,
+      const { api } = await import('@/lib/api')
+      await api.patch('/api/v1/admin/config', {
+        whatsapp_number: whatsapp || null,
+        callmebot_api_key: apiKey || null,
       })
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch {
-      setError('Error al guardar la configuración')
+      setError('Error al guardar. Intentá de nuevo.')
     } finally {
       setSaving(false)
     }
   }
 
+  const css = `
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0C0C0C; --bg2: #141414; --bg3: #1C1C1C;
+      --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
+      --txt: #FFFFFF; --txt2: rgba(255,255,255,0.45); --txt3: rgba(255,255,255,0.2);
+      --ac: #E85D04; --ac-dim: rgba(232,93,4,0.12);
+    }
+
+    .C-root { min-height: 100vh; background: var(--bg); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+
+    .C-nav { background: rgba(12,12,12,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
+    .C-nav-in { max-width: 640px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 58px; }
+    .C-nav-left { display: flex; align-items: center; gap: 10px; }
+    .C-nav-back { width: 32px; height: 32px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--txt2); font-size: 14px; transition: all 0.15s; }
+    .C-nav-back:hover { color: var(--txt); border-color: var(--border2); }
+    .C-nav-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt); }
+    .C-nav-exit { padding: 6px 12px; border-radius: 8px; font-size: 13px; color: var(--txt3); cursor: pointer; transition: all 0.15s; border: none; background: transparent; font-family: 'Inter', sans-serif; }
+    .C-nav-exit:hover { color: #f87171; background: rgba(239,68,68,0.08); }
+
+    .C-body { max-width: 640px; margin: 0 auto; padding: 32px 20px 60px; }
+
+    .C-section { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 28px; margin-bottom: 16px; }
+
+    .C-section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .C-section-icon { width: 40px; height: 40px; background: var(--ac-dim); border: 1px solid rgba(232,93,4,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .C-section-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; color: var(--txt); }
+    .C-section-sub { font-size: 13px; color: var(--txt3); margin-top: 2px; }
+
+    .C-group { margin-bottom: 16px; }
+    .C-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--txt3); display: block; margin-bottom: 8px; }
+    .C-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 13px 16px; font-size: 15px; color: var(--txt); font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.18s; }
+    .C-input:focus { border-color: var(--ac); }
+    .C-input::placeholder { color: var(--txt3); }
+    .C-input-hint { font-size: 12px; color: var(--txt3); margin-top: 6px; line-height: 1.5; }
+    .C-input-hint a { color: var(--ac); text-decoration: none; }
+
+    .C-divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    .C-save { width: 100%; background: var(--ac); color: #fff; border: none; border-radius: 12px; padding: 15px; font-size: 15px; font-weight: 600; font-family: 'Syne', sans-serif; cursor: pointer; transition: all 0.18s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .C-save:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .C-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .C-save.saved { background: #22c55e; }
+
+    .C-error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #f87171; margin-bottom: 16px; }
+
+    .C-info { background: var(--bg3); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+    .C-info-title { font-size: 13px; font-weight: 500; color: var(--txt2); margin-bottom: 12px; }
+    .C-info-step { display: flex; gap: 10px; margin-bottom: 8px; align-items: flex-start; }
+    .C-info-step:last-child { margin-bottom: 0; }
+    .C-info-num { width: 20px; height: 20px; background: var(--ac-dim); border: 1px solid rgba(232,93,4,0.2); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--ac); font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+    .C-info-text { font-size: 13px; color: var(--txt3); line-height: 1.5; }
+    .C-info-text code { background: rgba(255,255,255,0.07); padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--txt2); }
+
+    .LD { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+    .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg) } }
+  `
+
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-    </div>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <div className="LD"><div className="LD-ring" /></div>
+    </>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🍽️</span>
-          <div>
-            <h1 className="font-bold text-gray-800">Panel Admin</h1>
-            <p className="text-xs text-gray-500">Configuración</p>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <div className="C-root">
+        <nav className="C-nav">
+          <div className="C-nav-in">
+            <div className="C-nav-left">
+              <button className="C-nav-back" onClick={() => router.push('/dashboard')}>←</button>
+              <span className="C-nav-title">Configuración</span>
+            </div>
+            <button className="C-nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="text-sm text-gray-600 hover:text-orange-500 font-medium transition-colors"
-          >
-            📋 Pedidos
-          </button>
-          <button
-            onClick={() => router.push('/dashboard/menu')}
-            className="text-sm text-gray-600 hover:text-orange-500 font-medium transition-colors"
-          >
-            🍔 Menú
-          </button>
-          <button
-            onClick={() => { removeToken(); router.push('/') }}
-            className="text-sm text-gray-400 hover:text-red-500 transition-colors"
-          >
-            Salir
-          </button>
-        </div>
-      </div>
+        </nav>
 
-      <div className="max-w-lg mx-auto px-4 py-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-6">Configuración de notificaciones</h2>
+        <div className="C-body">
+          <div className="C-section">
+            <div className="C-section-head">
+              <div className="C-section-icon">💬</div>
+              <div>
+                <p className="C-section-title">Notificaciones WhatsApp</p>
+                <p className="C-section-sub">Recibí cada pedido en tu teléfono</p>
+              </div>
+            </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Número de WhatsApp
-            </label>
-            <p className="text-xs text-gray-400 mb-2">
-              Formato internacional sin espacios, ej: 5491112345678
-            </p>
-            <input
-              type="text"
-              value={whatsapp}
-              onChange={e => setWhatsapp(e.target.value)}
-              placeholder="5491112345678"
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
-            />
-          </div>
+            <div className="C-group">
+              <label className="C-label">Número de WhatsApp</label>
+              <input
+                className="C-input"
+                placeholder="5492615551234"
+                value={whatsapp}
+                onChange={e => setWhatsapp(e.target.value)}
+              />
+              <p className="C-input-hint">Formato internacional sin + ni espacios. Ej: 5492615551234</p>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              CallMeBot API Key
-            </label>
-            <p className="text-xs text-gray-400 mb-2">
-              Obtenela en <span className="font-medium text-gray-500">callmebot.com</span> enviando un mensaje a su bot de WhatsApp
-            </p>
-            <input
-              type="text"
-              value={apiKey}
-              onChange={e => setApiKey(e.target.value)}
-              placeholder="123456"
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
-            />
+            <div className="C-group">
+              <label className="C-label">CallMeBot API Key</label>
+              <input
+                className="C-input"
+                placeholder="Tu API key de CallMeBot"
+                value={apiKey}
+                onChange={e => setApiKey(e.target.value)}
+              />
+              <p className="C-input-hint">
+                Obtenela gratis en <a href="https://callmebot.com" target="_blank">callmebot.com</a>
+              </p>
+            </div>
+
+            <div className="C-divider" />
+
+            <div className="C-info">
+              <p className="C-info-title">Cómo activar CallMeBot</p>
+              <div className="C-info-step">
+                <div className="C-info-num">1</div>
+                <p className="C-info-text">Guardá el número <code>+34 644 59 73 45</code> en tus contactos como "CallMeBot"</p>
+              </div>
+              <div className="C-info-step">
+                <div className="C-info-num">2</div>
+                <p className="C-info-text">Enviále el mensaje: <code>I allow callmebot to send me messages</code></p>
+              </div>
+              <div className="C-info-step">
+                <div className="C-info-num">3</div>
+                <p className="C-info-text">Te responde con tu API key. Copiala acá arriba.</p>
+              </div>
+            </div>
           </div>
 
-          {error && (
-            <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-2.5">{error}</p>
-          )}
-
-          {saved && (
-            <p className="text-sm text-green-600 bg-green-50 rounded-xl px-4 py-2.5">
-              ✅ Configuración guardada
-            </p>
-          )}
+          {error && <div className="C-error">{error}</div>}
 
           <button
-            type="submit"
+            className={`C-save${saved ? ' saved' : ''}`}
+            onClick={handleSave}
             disabled={saving}
-            className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-medium py-2.5 rounded-xl transition-colors"
           >
-            {saving ? 'Guardando...' : 'Guardar cambios'}
+            {saving ? 'Guardando...' : saved ? '✓ Guardado' : 'Guardar cambios'}
           </button>
-        </form>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

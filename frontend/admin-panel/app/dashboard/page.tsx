@@ -28,21 +28,39 @@ interface Order {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: '⏳ Pendiente',
-  confirmed: '✅ Confirmado',
-  preparing: '👨‍🍳 Preparando',
-  ready: '🔔 Listo',
-  delivered: '✔️ Entregado',
-  cancelled: '❌ Cancelado',
+  pending: 'Pendiente',
+  confirmed: 'Confirmado',
+  preparing: 'Preparando',
+  ready: 'Listo',
+  delivered: 'Entregado',
+  cancelled: 'Cancelado',
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  confirmed: 'bg-blue-100 text-blue-800',
-  preparing: 'bg-orange-100 text-orange-800',
-  ready: 'bg-green-100 text-green-800',
-  delivered: 'bg-gray-100 text-gray-600',
-  cancelled: 'bg-red-100 text-red-800',
+  pending: 'rgba(234,179,8,0.12)',
+  confirmed: 'rgba(59,130,246,0.12)',
+  preparing: 'rgba(232,93,4,0.12)',
+  ready: 'rgba(34,197,94,0.12)',
+  delivered: 'rgba(255,255,255,0.05)',
+  cancelled: 'rgba(239,68,68,0.08)',
+}
+
+const STATUS_TEXT: Record<string, string> = {
+  pending: '#eab308',
+  confirmed: '#60a5fa',
+  preparing: '#E85D04',
+  ready: '#22c55e',
+  delivered: 'rgba(255,255,255,0.3)',
+  cancelled: '#f87171',
+}
+
+const STATUS_DOT: Record<string, string> = {
+  pending: '#eab308',
+  confirmed: '#60a5fa',
+  preparing: '#E85D04',
+  ready: '#22c55e',
+  delivered: 'rgba(255,255,255,0.2)',
+  cancelled: '#f87171',
 }
 
 const NEXT_STATUS: Record<string, string> = {
@@ -52,18 +70,23 @@ const NEXT_STATUS: Record<string, string> = {
   ready: 'delivered',
 }
 
+const NEXT_LABEL: Record<string, string> = {
+  pending: 'Confirmar',
+  confirmed: 'Preparando',
+  preparing: 'Listo',
+  ready: 'Entregado',
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'active' | 'all'>('active')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
     const token = getToken()
-    if (!token) {
-      router.push('/')
-      return
-    }
+    if (!token) { router.push('/'); return }
     setAuthToken(token)
     loadOrders()
   }, [])
@@ -91,168 +114,346 @@ export default function DashboardPage() {
     await loadOrders()
   }
 
+  const fmt = (n: string | number) => parseFloat(String(n)).toLocaleString('es-AR')
   const activeOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.status))
   const displayOrders = activeTab === 'active' ? activeOrders : orders
+  const todayTotal = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + parseFloat(o.total), 0)
 
-  const todayTotal = orders
-    .filter(o => o.status !== 'cancelled')
-    .reduce((sum, o) => sum + parseFloat(o.total), 0)
+  const css = `
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0C0C0C;
+      --bg2: #141414;
+      --bg3: #1C1C1C;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.12);
+      --txt: #FFFFFF;
+      --txt2: rgba(255,255,255,0.45);
+      --txt3: rgba(255,255,255,0.2);
+      --ac: #E85D04;
+      --ac-dim: rgba(232,93,4,0.12);
+    }
+
+    .D-root { min-height: 100vh; background: var(--bg); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+
+    .D-nav {
+      background: rgba(12,12,12,0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .D-nav-in {
+      max-width: 900px; margin: 0 auto;
+      padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 58px;
+    }
+    .D-nav-left { display: flex; align-items: center; gap: 10px; }
+    .D-nav-logo {
+      width: 32px; height: 32px;
+      background: var(--ac-dim);
+      border: 1px solid rgba(232,93,4,0.2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+    }
+    .D-nav-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt); }
+
+    .D-nav-links { display: flex; align-items: center; gap: 4px; }
+    .D-nav-link {
+      padding: 6px 12px; border-radius: 8px;
+      font-size: 13px; color: var(--txt2);
+      cursor: pointer; transition: all 0.15s;
+      border: none; background: transparent;
+      font-family: 'Inter', sans-serif;
+    }
+    .D-nav-link:hover { color: var(--txt); background: rgba(255,255,255,0.05); }
+    .D-nav-link.active { color: var(--txt); background: rgba(255,255,255,0.08); }
+    .D-nav-exit {
+      padding: 6px 12px; border-radius: 8px;
+      font-size: 13px; color: var(--txt3);
+      cursor: pointer; transition: all 0.15s;
+      border: none; background: transparent;
+      font-family: 'Inter', sans-serif;
+    }
+    .D-nav-exit:hover { color: #f87171; background: rgba(239,68,68,0.08); }
+
+    .D-body { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    .D-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+    .D-stat {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px;
+    }
+    .D-stat-label { font-size: 12px; color: var(--txt3); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 10px; }
+    .D-stat-val { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+    .D-stat-val.orange { color: var(--ac); }
+    .D-stat-val.green { color: #22c55e; }
+    .D-stat-val.white { color: var(--txt); }
+
+    .D-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .D-tab {
+      padding: 7px 16px; border-radius: 100px;
+      font-size: 13px; font-weight: 400;
+      cursor: pointer; transition: all 0.15s;
+      border: 1px solid var(--border);
+      background: transparent; color: var(--txt2);
+      font-family: 'Inter', sans-serif;
+    }
+    .D-tab:hover { border-color: var(--border2); color: var(--txt); }
+    .D-tab.on { background: var(--ac); border-color: var(--ac); color: #fff; font-weight: 500; }
+
+    .D-refresh {
+      margin-left: auto;
+      padding: 7px 14px; border-radius: 100px;
+      font-size: 13px; color: var(--txt3);
+      cursor: pointer; transition: all 0.15s;
+      border: 1px solid var(--border);
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .D-refresh:hover { color: var(--txt2); border-color: var(--border2); }
+
+    .D-empty { text-align: center; padding: 72px 20px; color: var(--txt3); font-size: 14px; }
+    .D-empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.3; }
+
+    .D-orders { display: flex; flex-direction: column; gap: 10px; }
+
+    .D-order {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 18px; overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .D-order:hover { border-color: var(--border2); }
+
+    .D-order-head {
+      padding: 16px 18px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer;
+    }
+
+    .D-order-id {
+      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+      color: var(--txt); letter-spacing: 0.02em;
+    }
+
+    .D-status-badge {
+      padding: 4px 10px; border-radius: 100px;
+      font-size: 12px; font-weight: 500;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .D-status-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    .D-order-info { flex: 1; min-width: 0; }
+    .D-order-customer { font-size: 13px; color: var(--txt2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .D-order-total {
+      font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800;
+      color: var(--ac); letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+
+    .D-order-time { font-size: 11px; color: var(--txt3); flex-shrink: 0; }
+
+    .D-order-body {
+      border-top: 1px solid var(--border);
+      padding: 16px 18px;
+    }
+
+    .D-order-details { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .D-detail-chip {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 12px; color: var(--txt2);
+      display: flex; align-items: center; gap: 5px;
+    }
+
+    .D-items-list { margin-bottom: 16px; }
+    .D-item-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .D-item-row:last-child { border-bottom: none; }
+    .D-item-name { font-size: 13px; color: var(--txt2); }
+    .D-item-price { font-size: 13px; font-weight: 500; color: var(--txt); }
+
+    .D-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .D-btn-next {
+      flex: 1; min-width: 140px;
+      background: var(--ac); color: #fff; border: none;
+      border-radius: 10px; padding: 11px 16px;
+      font-size: 13px; font-weight: 600;
+      font-family: 'Syne', sans-serif;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .D-btn-next:hover { filter: brightness(1.1); }
+
+    .D-btn-cancel {
+      padding: 11px 14px; border-radius: 10px;
+      font-size: 13px; color: #f87171;
+      cursor: pointer; transition: all 0.15s;
+      border: 1px solid rgba(239,68,68,0.15);
+      background: rgba(239,68,68,0.05);
+      font-family: 'Inter', sans-serif;
+    }
+    .D-btn-cancel:hover { background: rgba(239,68,68,0.1); }
+
+    .D-btn-del {
+      padding: 11px 14px; border-radius: 10px;
+      font-size: 13px; color: var(--txt3);
+      cursor: pointer; transition: all 0.15s;
+      border: 1px solid var(--border);
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+    }
+    .D-btn-del:hover { color: var(--txt2); border-color: var(--border2); }
+
+    .D-chevron { color: var(--txt3); font-size: 12px; transition: transform 0.2s; flex-shrink: 0; }
+    .D-chevron.open { transform: rotate(180deg); }
+
+    .LD { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+    .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg) } }
+
+    @media (max-width: 600px) {
+      .D-stats { grid-template-columns: repeat(2, 1fr); }
+      .D-stat:last-child { grid-column: span 2; }
+      .D-stat-val { font-size: 22px; }
+    }
+  `
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-    </div>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <div className="LD"><div className="LD-ring" /></div>
+    </>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🍽️</span>
-          <div>
-            <h1 className="font-bold text-gray-800">Panel Admin</h1>
-            <p className="text-xs text-gray-500">Gestión de pedidos</p>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <div className="D-root">
+        <nav className="D-nav">
+          <div className="D-nav-in">
+            <div className="D-nav-left">
+              <div className="D-nav-logo">🍽️</div>
+              <span className="D-nav-title">Panel Admin</span>
+            </div>
+            <div className="D-nav-links">
+              <button className="D-nav-link active" onClick={() => router.push('/dashboard')}>Pedidos</button>
+              <button className="D-nav-link" onClick={() => router.push('/dashboard/menu')}>Menú</button>
+              <button className="D-nav-link" onClick={() => router.push('/dashboard/config')}>Config</button>
+              <button className="D-nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push('/dashboard/menu')}
-            className="text-sm text-gray-600 hover:text-orange-500 font-medium transition-colors"
-          >
-            🍔 Menú
-          </button>
-          <button
-            onClick={() => router.push('/dashboard/config')}
-            className="text-sm text-gray-600 hover:text-orange-500 font-medium transition-colors"
-          >
-            ⚙️ Config
-          </button>
-          <button
-            onClick={() => { removeToken(); router.push('/') }}
-            className="text-sm text-gray-400 hover:text-red-500 transition-colors"
-          >
-            Salir
-          </button>
-        </div>
-      </div>
+        </nav>
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-2xl p-4 border border-gray-100">
-            <p className="text-sm text-gray-500">Pedidos activos</p>
-            <p className="text-3xl font-bold text-orange-500">{activeOrders.length}</p>
+        <div className="D-body">
+          <div className="D-stats">
+            <div className="D-stat">
+              <p className="D-stat-label">Activos</p>
+              <p className="D-stat-val orange">{activeOrders.length}</p>
+            </div>
+            <div className="D-stat">
+              <p className="D-stat-label">Total del día</p>
+              <p className="D-stat-val green">${fmt(todayTotal)}</p>
+            </div>
+            <div className="D-stat">
+              <p className="D-stat-label">Total pedidos</p>
+              <p className="D-stat-val white">{orders.length}</p>
+            </div>
           </div>
-          <div className="bg-white rounded-2xl p-4 border border-gray-100">
-            <p className="text-sm text-gray-500">Total del día</p>
-            <p className="text-3xl font-bold text-green-500">${todayTotal.toLocaleString()}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-4 border border-gray-100">
-            <p className="text-sm text-gray-500">Total pedidos</p>
-            <p className="text-3xl font-bold text-gray-700">{orders.length}</p>
-          </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setActiveTab('active')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              activeTab === 'active' ? 'bg-orange-500 text-white' : 'bg-white text-gray-600'
-            }`}
-          >
-            Activos ({activeOrders.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('all')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              activeTab === 'all' ? 'bg-orange-500 text-white' : 'bg-white text-gray-600'
-            }`}
-          >
-            Todos ({orders.length})
-          </button>
-          <button
-            onClick={loadOrders}
-            className="ml-auto px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 hover:text-orange-500 transition-colors"
-          >
-            🔄 Actualizar
-          </button>
-        </div>
-
-        {/* Orders */}
-        {displayOrders.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <p className="text-4xl mb-3">📋</p>
-            <p>No hay pedidos {activeTab === 'active' ? 'activos' : ''}</p>
+          <div className="D-toolbar">
+            <button className={`D-tab${activeTab === 'active' ? ' on' : ''}`} onClick={() => setActiveTab('active')}>
+              Activos ({activeOrders.length})
+            </button>
+            <button className={`D-tab${activeTab === 'all' ? ' on' : ''}`} onClick={() => setActiveTab('all')}>
+              Todos ({orders.length})
+            </button>
+            <button className="D-refresh" onClick={loadOrders}>
+              ↺ Actualizar
+            </button>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {displayOrders.map((order) => (
-              <div key={order.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-gray-800">
-                        #{order.id.slice(0, 8).toUpperCase()}
-                      </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[order.status]}`}>
+
+          {displayOrders.length === 0 ? (
+            <div className="D-empty">
+              <div className="D-empty-icon">📋</div>
+              No hay pedidos {activeTab === 'active' ? 'activos' : ''}
+            </div>
+          ) : (
+            <div className="D-orders">
+              {displayOrders.map(order => {
+                const isOpen = expandedId === order.id
+                return (
+                  <div key={order.id} className="D-order">
+                    <div className="D-order-head" onClick={() => setExpandedId(isOpen ? null : order.id)}>
+                      <div>
+                        <p className="D-order-id">#{order.id.slice(0, 8).toUpperCase()}</p>
+                        <p className="D-order-customer">
+                          {[order.customer_name, order.table_number && `Mesa ${order.table_number}`].filter(Boolean).join(' · ') || 'Sin datos'}
+                        </p>
+                      </div>
+                      <div
+                        className="D-status-badge"
+                        style={{ background: STATUS_COLORS[order.status], color: STATUS_TEXT[order.status] }}
+                      >
+                        <span className="D-status-dot" style={{ background: STATUS_DOT[order.status] }} />
                         {STATUS_LABELS[order.status]}
-                      </span>
+                      </div>
+                      <div style={{ flex: 1 }} />
+                      <p className="D-order-total">${fmt(order.total)}</p>
+                      <p className="D-order-time">
+                        {new Date(order.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                      <span className={`D-chevron${isOpen ? ' open' : ''}`}>▼</span>
                     </div>
-                    <div className="text-sm text-gray-500 space-y-0.5">
-                      {order.customer_name && <p>👤 {order.customer_name}</p>}
-                      {order.customer_phone && <p>📞 {order.customer_phone}</p>}
-                      {order.table_number && <p>🪑 Mesa {order.table_number}</p>}
-                      {order.notes && <p>📝 {order.notes}</p>}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-orange-500">${parseFloat(order.total).toLocaleString()}</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(order.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
 
-                {/* Items */}
-                <div className="border-t border-gray-50 pt-3 mb-3 space-y-1">
-                  {order.items.map((item) => (
-                    <div key={item.id} className="flex justify-between text-sm">
-                      <span className="text-gray-600">{item.quantity}x item</span>
-                      <span className="text-gray-700 font-medium">${parseFloat(item.subtotal).toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
+                    {isOpen && (
+                      <div className="D-order-body">
+                        <div className="D-order-details">
+                          {order.customer_name && <span className="D-detail-chip">👤 {order.customer_name}</span>}
+                          {order.customer_phone && <span className="D-detail-chip">📞 {order.customer_phone}</span>}
+                          {order.table_number && <span className="D-detail-chip">🪑 Mesa {order.table_number}</span>}
+                          {order.notes && <span className="D-detail-chip">📝 {order.notes}</span>}
+                          <span className="D-detail-chip">{order.payment_method === 'cash' ? '💵 Efectivo' : '💳 Online'}</span>
+                        </div>
 
-                {/* Actions */}
-                <div className="flex gap-2">
-                  {NEXT_STATUS[order.status] && (
-                    <button
-                      onClick={() => handleStatusChange(order.id, NEXT_STATUS[order.status])}
-                      className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-xl text-sm font-medium transition-colors"
-                    >
-                      → {STATUS_LABELS[NEXT_STATUS[order.status]]}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleStatusChange(order.id, 'cancelled')}
-                    className="px-3 py-2 rounded-xl text-sm text-red-400 hover:bg-red-50 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(order.id)}
-                    className="px-3 py-2 rounded-xl text-sm text-gray-400 hover:bg-gray-50 transition-colors"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                        <div className="D-items-list">
+                          {order.items.map(item => (
+                            <div key={item.id} className="D-item-row">
+                              <span className="D-item-name">{item.quantity}x item</span>
+                              <span className="D-item-price">${fmt(item.subtotal)}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="D-actions">
+                          {NEXT_STATUS[order.status] && (
+                            <button className="D-btn-next" onClick={() => handleStatusChange(order.id, NEXT_STATUS[order.status])}>
+                              {NEXT_LABEL[order.status]} →
+                            </button>
+                          )}
+                          {order.status !== 'cancelled' && (
+                            <button className="D-btn-cancel" onClick={() => handleStatusChange(order.id, 'cancelled')}>
+                              Cancelar
+                            </button>
+                          )}
+                          <button className="D-btn-del" onClick={() => handleDelete(order.id)}>🗑️</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
