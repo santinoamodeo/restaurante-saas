@@ -9,6 +9,7 @@ export default function ConfigPage() {
   const router = useRouter()
   const [whatsapp, setWhatsapp] = useState('')
   const [apiKey, setApiKey] = useState('')
+  const [primaryColor, setPrimaryColor] = useState('#E85D04')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -27,6 +28,7 @@ export default function ConfigPage() {
       const res = await api.get('/api/v1/admin/config')
       setWhatsapp(res.data.whatsapp_number || '')
       setApiKey(res.data.callmebot_api_key || '')
+      setPrimaryColor(res.data.primary_color || '#E85D04')
     } catch {
       removeToken(); router.push('/')
     } finally {
@@ -41,6 +43,7 @@ export default function ConfigPage() {
       await api.patch('/api/v1/admin/config', {
         whatsapp_number: whatsapp || null,
         callmebot_api_key: apiKey || null,
+        primary_color: primaryColor,
       })
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
@@ -106,6 +109,22 @@ export default function ConfigPage() {
     .C-info-num { width: 20px; height: 20px; background: var(--ac-dim); border: 1px solid rgba(232,93,4,0.2); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--ac); font-weight: 600; flex-shrink: 0; margin-top: 1px; }
     .C-info-text { font-size: 13px; color: var(--txt3); line-height: 1.5; }
     .C-info-text code { background: rgba(255,255,255,0.07); padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--txt2); }
+
+    .C-color-row { display: flex; align-items: center; gap: 14px; }
+    .C-color-input {
+      width: 52px; height: 52px; border-radius: 12px; border: 1px solid var(--border);
+      background: none; cursor: pointer; padding: 3px; flex-shrink: 0;
+    }
+    .C-color-input::-webkit-color-swatch-wrapper { padding: 0; border-radius: 8px; }
+    .C-color-input::-webkit-color-swatch { border: none; border-radius: 8px; }
+    .C-color-preview {
+      flex: 1; height: 52px; border-radius: 12px;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 16px; gap: 10px;
+    }
+    .C-color-dot { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
+    .C-color-hex { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--txt); }
+    .C-color-label { font-size: 12px; color: var(--txt3); }
 
     .LD { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
     .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
@@ -182,6 +201,35 @@ export default function ConfigPage() {
               <div className="C-info-step">
                 <div className="C-info-num">3</div>
                 <p className="C-info-text">Te responde con tu API key. Copiala acá arriba.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="C-section">
+            <div className="C-section-head">
+              <div className="C-section-icon">🎨</div>
+              <div>
+                <p className="C-section-title">Apariencia</p>
+                <p className="C-section-sub">Personalizá el color del menú público</p>
+              </div>
+            </div>
+
+            <div className="C-group">
+              <label className="C-label">Color principal del restaurante</label>
+              <div className="C-color-row">
+                <input
+                  type="color"
+                  className="C-color-input"
+                  value={primaryColor}
+                  onChange={e => setPrimaryColor(e.target.value)}
+                />
+                <div className="C-color-preview" style={{ background: primaryColor + '18' }}>
+                  <div className="C-color-dot" style={{ background: primaryColor }} />
+                  <div>
+                    <p className="C-color-hex">{primaryColor.toUpperCase()}</p>
+                    <p className="C-color-label">Se aplica en botones, precios y badges del menú</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
