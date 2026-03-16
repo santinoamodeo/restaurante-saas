@@ -30,6 +30,7 @@ function RestauranteInner() {
   const [submitting, setSubmitting] = useState(false)
   const [activeCategory, setActiveCategory] = useState('')
   const [form, setForm] = useState({ customer_name: '', customer_phone: '', table_number: '', notes: '' })
+  const [formErrors, setFormErrors] = useState<{ customer_name?: string; customer_phone?: string; table_number?: string }>({})
 
   // Welcome screen state
   const [orderType, setOrderType] = useState<OrderType>(null)
@@ -97,7 +98,21 @@ function RestauranteInner() {
   const cartTotal = cart.reduce((s, c) => s + parseFloat(c.item.price) * c.quantity, 0)
   const cartCount = cart.reduce((s, c) => s + c.quantity, 0)
 
+  const validateForm = () => {
+    const errors: { customer_name?: string; customer_phone?: string; table_number?: string } = {}
+    if (!form.customer_name.trim()) errors.customer_name = 'El nombre es obligatorio'
+    if (!form.customer_phone.trim()) errors.customer_phone = 'El teléfono es obligatorio'
+    if (orderType === 'dine_in' && !form.table_number.trim()) errors.table_number = 'Ingresá el número de mesa'
+    return errors
+  }
+
   const handleOrder = async () => {
+    const errors = validateForm()
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      return
+    }
+    setFormErrors({})
     setSubmitting(true)
     try {
       await createOrder(slug, {
@@ -300,6 +315,9 @@ function RestauranteInner() {
     .F-input:focus { border-color: var(--ac); }
     .F-ta { resize: none; height: 74px; }
     .F-otype-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--ac-dim); border: 1px solid var(--ac); border-radius: 100px; padding: 5px 12px; font-size: 12px; color: var(--ac); font-weight: 500; margin-bottom: 16px; }
+    .F-input.err { border-color: #E53E3E; }
+    .F-error { font-size: 11px; color: #E53E3E; margin-top: 5px; display: block; }
+    .F-req { color: var(--ac); margin-left: 2px; }
 
     .LD { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); gap: 14px; }
     .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
@@ -509,23 +527,43 @@ function RestauranteInner() {
 
         {showForm && (
           <>
-            <div className="OV" onClick={() => setShowForm(false)} />
+            <div className="OV" onClick={() => { setShowForm(false); setFormErrors({}) }} />
             <div className="BS">
               <div className="BS-handle" />
               <h2 className="BS-title">Tus datos</h2>
               <span className="F-otype-badge">{orderTypeBadge}</span>
               <div className="F-group">
-                <label className="F-label">Nombre</label>
-                <input className="F-input" placeholder="¿Cómo te llamás?" value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} />
+                <label className="F-label">Nombre<span className="F-req">*</span></label>
+                <input
+                  className={`F-input${formErrors.customer_name ? ' err' : ''}`}
+                  placeholder="¿Cómo te llamás?"
+                  value={form.customer_name}
+                  onChange={e => { setForm({ ...form, customer_name: e.target.value }); if (formErrors.customer_name) setFormErrors(p => ({ ...p, customer_name: undefined })) }}
+                />
+                {formErrors.customer_name && <span className="F-error">{formErrors.customer_name}</span>}
               </div>
               <div className="F-group">
-                <label className="F-label">Teléfono (opcional)</label>
-                <input className="F-input" placeholder="2615xxxxxx" value={form.customer_phone} onChange={e => setForm({ ...form, customer_phone: e.target.value })} />
+                <label className="F-label">Teléfono<span className="F-req">*</span></label>
+                <input
+                  className={`F-input${formErrors.customer_phone ? ' err' : ''}`}
+                  placeholder="2615xxxxxx"
+                  inputMode="tel"
+                  value={form.customer_phone}
+                  onChange={e => { setForm({ ...form, customer_phone: e.target.value }); if (formErrors.customer_phone) setFormErrors(p => ({ ...p, customer_phone: undefined })) }}
+                />
+                {formErrors.customer_phone && <span className="F-error">{formErrors.customer_phone}</span>}
               </div>
               {orderType === 'dine_in' && (
                 <div className="F-group">
-                  <label className="F-label">Mesa</label>
-                  <input className="F-input" placeholder="Ej: 4" value={form.table_number} onChange={e => setForm({ ...form, table_number: e.target.value })} />
+                  <label className="F-label">Mesa<span className="F-req">*</span></label>
+                  <input
+                    className={`F-input${formErrors.table_number ? ' err' : ''}`}
+                    placeholder="Ej: 4"
+                    inputMode="numeric"
+                    value={form.table_number}
+                    onChange={e => { setForm({ ...form, table_number: e.target.value }); if (formErrors.table_number) setFormErrors(p => ({ ...p, table_number: undefined })) }}
+                  />
+                  {formErrors.table_number && <span className="F-error">{formErrors.table_number}</span>}
                 </div>
               )}
               <div className="F-group" style={{ marginBottom: 20 }}>
