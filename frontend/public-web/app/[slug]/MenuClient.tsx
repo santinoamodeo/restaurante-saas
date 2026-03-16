@@ -1,0 +1,446 @@
+'use client'
+
+import { useEffect, useState, useRef, Suspense } from 'react'
+import { getMenu, createOrder, MenuCategory, MenuItem, CreateOrderPayload } from '@/lib/api'
+import { useParams, useSearchParams } from 'next/navigation'
+
+interface CartItem {
+  item: MenuItem
+  quantity: number
+  notes: string
+}
+
+function RestauranteInner() {
+  const params = useParams()
+  const slug = params.slug as string
+  const searchParams = useSearchParams()
+
+  const [tenantName, setTenantName] = useState('')
+  const [primaryColor, setPrimaryColor] = useState('#FF4D00')
+  const [categories, setCategories] = useState<MenuCategory[]>([])
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [showCart, setShowCart] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [orderSuccess, setOrderSuccess] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [activeCategory, setActiveCategory] = useState('')
+  const [addedId, setAddedId] = useState<string | null>(null)
+  const [form, setForm] = useState({ customer_name: '', customer_phone: '', table_number: '', notes: '' })
+
+  useEffect(() => {
+    const mesa = searchParams.get('mesa')
+    if (mesa) setForm(prev => ({ ...prev, table_number: mesa }))
+  }, [searchParams])
+
+  useEffect(() => {
+    getMenu(slug)
+      .then((data: any) => {
+        const cats = data.categories || data
+        const name = data.tenant_name || slug.replace(/-/g, ' ')
+        const color = data.primary_color || '#FF4D00'
+        setTenantName(name)
+        setPrimaryColor(color)
+        setCategories(cats)
+        if (cats.length > 0) setActiveCategory(cats[0].id)
+        document.documentElement.style.setProperty('--ac', color)
+        document.documentElement.style.setProperty('--ac-dim', color + '22')
+      })
+      .catch(() => setError('Restaurante no encontrado'))
+      .finally(() => setLoading(false))
+  }, [slug])
+
+  const addToCart = (item: MenuItem) => {
+    setAddedId(item.id)
+    setTimeout(() => setAddedId(null), 400)
+    setCart(prev => {
+      const ex = prev.find(c => c.item.id === item.id)
+      if (ex) return prev.map(c => c.item.id === item.id ? { ...c, quantity: c.quantity + 1 } : c)
+      return [...prev, { item, quantity: 1, notes: '' }]
+    })
+  }
+
+  const removeFromCart = (itemId: string) => {
+    setCart(prev => {
+      const ex = prev.find(c => c.item.id === itemId)
+      if (ex && ex.quantity > 1) return prev.map(c => c.item.id === itemId ? { ...c, quantity: c.quantity - 1 } : c)
+      return prev.filter(c => c.item.id !== itemId)
+    })
+  }
+
+  const cartTotal = cart.reduce((s, c) => s + parseFloat(c.item.price) * c.quantity, 0)
+  const cartCount = cart.reduce((s, c) => s + c.quantity, 0)
+
+  const handleOrder = async () => {
+    setSubmitting(true)
+    try {
+      await createOrder(slug, {
+        ...form,
+        payment_method: 'cash',
+        items: cart.map(c => ({ menu_item_id: c.item.id, quantity: c.quantity, notes: c.notes || undefined })),
+      } as CreateOrderPayload)
+      setOrderSuccess(true)
+      setCart([])
+      setShowForm(false)
+    } catch {
+      alert('Error al enviar el pedido.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const fmt = (n: number | string) => parseFloat(String(n)).toLocaleString('es-AR')
+  const activeItems = categories.find(c => c.id === activeCategory)?.items?.filter(i => i.is_available) || []
+
+  const css = `
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ac: ${primaryColor};
+      --ac-dim: ${primaryColor}22;
+      --bg: #0C0C0C;
+      --bg2: #161616;
+      --bg3: #1E1E1E;
+      --border: rgba(255,255,255,0.07);
+      --txt: #FFFFFF;
+      --txt2: rgba(255,255,255,0.45);
+      --txt3: rgba(255,255,255,0.2);
+    }
+
+    .R { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--txt); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    .H {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(12,12,12,0.92);
+      backdrop-filter: saturate(180%) blur(24px);
+      -webkit-backdrop-filter: saturate(180%) blur(24px);
+      border-bottom: 1px solid var(--border);
+    }
+    .H-in { max-width: 600px; margin: 0 auto; padding: 18px 16px 0; }
+    .H-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+    .H-name {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(20px, 6vw, 30px);
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      line-height: 1;
+      color: var(--txt);
+      text-transform: capitalize;
+    }
+    .H-badge {
+      background: var(--ac-dim);
+      color: var(--ac);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 11px;
+      border-radius: 100px;
+      border: 1px solid var(--ac);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .C-wrap { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 14px; scrollbar-width: none; }
+    .C-wrap::-webkit-scrollbar { display: none; }
+    .C-btn {
+      flex-shrink: 0;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      padding: 6px 15px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--txt2);
+      cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .C-btn:hover { border-color: rgba(255,255,255,0.18); color: var(--txt); }
+    .C-btn.on { background: var(--ac); border-color: var(--ac); color: #fff; font-weight: 500; }
+
+    .I-list { max-width: 600px; margin: 0 auto; padding: 12px 12px 140px; display: flex; flex-direction: column; gap: 8px; }
+
+    .I-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .I-card:hover { border-color: rgba(255,255,255,0.12); background: #181818; }
+
+    .I-img { width: 76px; height: 76px; border-radius: 13px; object-fit: cover; flex-shrink: 0; }
+    .I-ph {
+      width: 76px; height: 76px; border-radius: 13px;
+      background: var(--bg3);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; color: var(--txt3); font-size: 22px;
+    }
+    .I-info { flex: 1; min-width: 0; }
+    .I-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; color: var(--txt); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .I-desc { font-size: 12px; color: var(--txt2); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 7px; }
+    .I-price { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; color: var(--ac); }
+
+    .I-ctrl { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+    .Btn-add {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--ac); border: none; color: #fff;
+      font-size: 20px; line-height: 1;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s, filter 0.15s;
+    }
+    .Btn-add:hover { filter: brightness(1.15); transform: scale(1.07); }
+    .Btn-add:active { transform: scale(0.93); }
+    .Btn-sub {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--bg3); border: none; color: var(--txt);
+      font-size: 18px; line-height: 1;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .Btn-sub:hover { background: #2a2a2a; }
+    .I-qty { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; min-width: 18px; text-align: center; }
+
+    .CF { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 90; }
+    .CF-empty {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(22,22,22,0.88); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1); color: var(--txt3);
+      padding: 12px 24px; border-radius: 100px;
+      font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .CF-empty:hover { border-color: rgba(255,255,255,0.18); color: var(--txt2); }
+    .CF-full {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--ac); color: #fff;
+      padding: 15px 26px; border-radius: 100px;
+      font-size: 15px; font-weight: 600; font-family: 'Syne', sans-serif;
+      border: none; cursor: pointer; white-space: nowrap;
+      box-shadow: 0 4px 28px rgba(0,0,0,0.55);
+      transition: all 0.2s;
+    }
+    .CF-full:hover { filter: brightness(1.1); transform: translateY(-2px); }
+    .CF-pill { background: rgba(0,0,0,0.22); border-radius: 100px; padding: 2px 9px; font-size: 13px; font-weight: 700; }
+
+    .OV { position: fixed; inset: 0; z-index: 110; background: rgba(0,0,0,0.72); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); animation: fadein 0.2s; }
+    @keyframes fadein { from{opacity:0} to{opacity:1} }
+
+    .BS {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 120;
+      background: #141414; border: 1px solid rgba(255,255,255,0.08); border-bottom: none;
+      border-radius: 24px 24px 0 0; padding: 0 16px 28px;
+      max-height: 88vh; overflow-y: auto;
+      animation: slideup 0.3s cubic-bezier(0.32,0.72,0,1);
+      max-width: 600px; margin: 0 auto;
+    }
+    @keyframes slideup { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+    .BS-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 12px auto 20px; }
+    .BS-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--txt); margin-bottom: 18px; letter-spacing: -0.5px; }
+    .BS-line { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .BS-lname { flex:1; font-size: 14px; color: rgba(255,255,255,0.75); }
+    .BS-lprice { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; min-width: 72px; text-align: right; }
+    .BS-total { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
+    .BS-tlabel { font-size: 12px; color: var(--txt2); letter-spacing: 0.1em; text-transform: uppercase; }
+    .BS-tamount { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; color: var(--ac); letter-spacing: -0.5px; }
+    .BS-btn {
+      width: 100%; background: var(--ac); color: #fff; border: none;
+      border-radius: 14px; padding: 17px;
+      font-size: 16px; font-weight: 600; font-family: 'Syne', sans-serif;
+      cursor: pointer; margin-bottom: 8px; transition: all 0.18s;
+    }
+    .BS-btn:hover { filter: brightness(1.08); }
+    .BS-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .F-group { margin-bottom: 10px; }
+    .F-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--txt3); display: block; margin-bottom: 6px; }
+    .F-input { width: 100%; background: #1C1C1C; border: 1px solid rgba(255,255,255,0.08); border-radius: 11px; padding: 13px 14px; font-size: 15px; color: var(--txt); font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.18s; }
+    .F-input::placeholder { color: var(--txt3); }
+    .F-input:focus { border-color: var(--ac); }
+    .F-ta { resize: none; height: 74px; }
+
+    .LD { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); gap: 14px; }
+    .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .LD-txt { font-size: 12px; color: var(--txt3); letter-spacing: 0.06em; }
+
+    .SC { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); padding: 32px 20px; text-align: center; }
+    .SC-icon { font-size: 68px; margin-bottom: 24px; animation: bounce 2s ease-in-out infinite; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+    .SC-t { font-family: 'Syne', sans-serif; font-size: 34px; font-weight: 800; letter-spacing: -1px; color: var(--txt); margin-bottom: 10px; }
+    .SC-s { font-size: 15px; color: var(--txt2); line-height: 1.6; margin-bottom: 40px; }
+
+    .empty { text-align: center; padding: 72px 20px; color: var(--txt3); font-size: 14px; }
+    .empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.3; }
+  `
+
+  if (loading) return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <div className="LD">
+        <div className="LD-ring" />
+        <p className="LD-txt">Cargando menú</p>
+      </div>
+    </>
+  )
+
+  if (error) return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <div className="LD"><p className="LD-txt">{error}</p></div>
+    </>
+  )
+
+  if (orderSuccess) return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <div className="SC">
+        <div className="SC-icon">🎉</div>
+        <h2 className="SC-t">¡Pedido enviado!</h2>
+        <p className="SC-s">En breve el restaurante<br />confirma tu pedido.</p>
+        <button className="BS-btn" style={{ maxWidth: 280 }} onClick={() => setOrderSuccess(false)}>
+          Volver al menú
+        </button>
+      </div>
+    </>
+  )
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <div className="R">
+        <header className="H">
+          <div className="H-in">
+            <div className="H-top">
+              <h1 className="H-name">{tenantName}</h1>
+              <span className="H-badge">Menú digital</span>
+            </div>
+            <div className="C-wrap">
+              {categories.map(cat => (
+                <button key={cat.id} className={`C-btn${activeCategory === cat.id ? ' on' : ''}`} onClick={() => setActiveCategory(cat.id)}>
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </header>
+
+        <div className="I-list">
+          {activeItems.length === 0 ? (
+            <div className="empty">
+              <div className="empty-icon">🍽️</div>
+              Sin items disponibles
+            </div>
+          ) : activeItems.map(item => {
+            const ci = cart.find(c => c.item.id === item.id)
+            return (
+              <div key={item.id} className="I-card">
+                {item.image_url ? <img src={item.image_url} alt={item.name} className="I-img" /> : <div className="I-ph">🍴</div>}
+                <div className="I-info">
+                  <p className="I-name">{item.name}</p>
+                  {item.description && <p className="I-desc">{item.description}</p>}
+                  <p className="I-price">${fmt(item.price)}</p>
+                </div>
+                <div className="I-ctrl">
+                  {ci ? (
+                    <>
+                      <button className="Btn-sub" onClick={() => removeFromCart(item.id)}>−</button>
+                      <span className="I-qty">{ci.quantity}</span>
+                      <button className="Btn-add" onClick={() => addToCart(item)}>+</button>
+                    </>
+                  ) : (
+                    <button className="Btn-add" onClick={() => addToCart(item)}>+</button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="CF">
+          {cartCount === 0 ? (
+            <button className="CF-empty" onClick={() => setShowCart(true)}>🛒 Tu pedido</button>
+          ) : (
+            <button className="CF-full" onClick={() => setShowCart(true)}>
+              🛒 <span className="CF-pill">{cartCount}</span> ${fmt(cartTotal)}
+            </button>
+          )}
+        </div>
+
+        {showCart && (
+          <>
+            <div className="OV" onClick={() => setShowCart(false)} />
+            <div className="BS">
+              <div className="BS-handle" />
+              <h2 className="BS-title">Tu pedido</h2>
+              {cart.map(c => (
+                <div key={c.item.id} className="BS-line">
+                  <div className="I-ctrl" style={{ gap: 6 }}>
+                    <button className="Btn-sub" style={{ width: 28, height: 28, fontSize: 16 }} onClick={() => removeFromCart(c.item.id)}>−</button>
+                    <span className="I-qty" style={{ fontSize: 14 }}>{c.quantity}</span>
+                    <button className="Btn-add" style={{ width: 28, height: 28, fontSize: 16 }} onClick={() => addToCart(c.item)}>+</button>
+                  </div>
+                  <span className="BS-lname">{c.item.name}</span>
+                  <span className="BS-lprice">${fmt(parseFloat(c.item.price) * c.quantity)}</span>
+                </div>
+              ))}
+              <div className="BS-total">
+                <span className="BS-tlabel">Total</span>
+                <span className="BS-tamount">${fmt(cartTotal)}</span>
+              </div>
+              <button className="BS-btn" onClick={() => { setShowCart(false); setShowForm(true) }}>
+                Confirmar pedido →
+              </button>
+            </div>
+          </>
+        )}
+
+        {showForm && (
+          <>
+            <div className="OV" onClick={() => setShowForm(false)} />
+            <div className="BS">
+              <div className="BS-handle" />
+              <h2 className="BS-title">Tus datos</h2>
+              <div className="F-group">
+                <label className="F-label">Nombre</label>
+                <input className="F-input" placeholder="¿Cómo te llamás?" value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} />
+              </div>
+              <div className="F-group">
+                <label className="F-label">Teléfono (opcional)</label>
+                <input className="F-input" placeholder="2615xxxxxx" value={form.customer_phone} onChange={e => setForm({ ...form, customer_phone: e.target.value })} />
+              </div>
+              <div className="F-group">
+                <label className="F-label">Mesa (opcional)</label>
+                <input className="F-input" placeholder="Ej: 4" value={form.table_number} onChange={e => setForm({ ...form, table_number: e.target.value })} />
+              </div>
+              <div className="F-group" style={{ marginBottom: 20 }}>
+                <label className="F-label">Notas</label>
+                <textarea className="F-input F-ta" placeholder="Sin cebolla, alergias, etc." value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+              </div>
+              <button className="BS-btn" onClick={handleOrder} disabled={submitting}>
+                {submitting ? 'Enviando...' : `Pedir · $${fmt(cartTotal)}`}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  )
+}
+
+export default function RestaurantePage() {
+  return (
+    <Suspense>
+      <RestauranteInner />
+    </Suspense>
+  )
+}
