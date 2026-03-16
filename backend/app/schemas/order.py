@@ -24,6 +24,7 @@ class OrderItemResponse(BaseModel):
     unit_price: Decimal
     subtotal: Decimal
     notes: str | None
+    item_name: str | None = None
 
     class Config:
         from_attributes = True

@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.core.deps import get_current_tenant
-from app.models.order import Order, OrderStatus
+from app.models.order import Order, OrderItem, OrderStatus
 from app.models.tenant import Tenant
 from app.schemas.order import OrderCreate, OrderResponse, OrderStatusUpdate
 from app.services.order_service import create_order
@@ -40,7 +40,7 @@ async def list_orders(
     result = await db.execute(
         select(Order)
         .where(Order.tenant_id == tenant.id)
-        .options(selectinload(Order.items))
+        .options(selectinload(Order.items).selectinload(OrderItem.menu_item))
         .order_by(Order.created_at.desc())
     )
     return result.scalars().all()
@@ -54,7 +54,7 @@ async def get_order(
     result = await db.execute(
         select(Order)
         .where(Order.id == order_id, Order.tenant_id == tenant.id)
-        .options(selectinload(Order.items))
+        .options(selectinload(Order.items).selectinload(OrderItem.menu_item))
     )
     order = result.scalar_one_or_none()
     if not order:
@@ -71,7 +71,6 @@ async def update_order_status(
     result = await db.execute(
         select(Order)
         .where(Order.id == order_id, Order.tenant_id == tenant.id)
-        .options(selectinload(Order.items))
     )
     order = result.scalar_one_or_none()
     if not order:
@@ -79,8 +78,13 @@ async def update_order_status(
 
     order.status = data.status
     await db.commit()
-    await db.refresh(order)
-    return order
+
+    result = await db.execute(
+        select(Order)
+        .where(Order.id == order_id)
+        .options(selectinload(Order.items).selectinload(OrderItem.menu_item))
+    )
+    return result.scalar_one()
 
 @router.delete("/admin/orders/{order_id}")
 async def delete_order(

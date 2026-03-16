@@ -1,10 +1,14 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 from sqlalchemy import String, ForeignKey, Numeric, Text, DateTime, Enum as SAEnum, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 import enum
+
+if TYPE_CHECKING:
+    from app.models.menu import MenuItem
 
 class OrderStatus(str, enum.Enum):
     pending = "pending"
@@ -46,3 +50,11 @@ class OrderItem(Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     order: Mapped["Order"] = relationship("Order", back_populates="items")
+    menu_item: Mapped["MenuItem"] = relationship("MenuItem", lazy="raise")
+
+    @property
+    def item_name(self) -> str | None:
+        try:
+            return self.menu_item.name if self.menu_item else None
+        except Exception:
+            return None
