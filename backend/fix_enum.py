@@ -1,11 +1,12 @@
 import asyncio
-from app.core.database import engine
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import text
+import os
 
 async def migrate():
+    engine = create_async_engine(os.environ['DATABASE_URL'])
     async with engine.begin() as conn:
-        await conn.execute(text("ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'superadmin'"))
-        await conn.execute(text("ALTER TABLE users ALTER COLUMN tenant_id DROP NOT NULL"))
-        print('Migraciones Neon OK')
+        await conn.execute(text('ALTER TABLE tenants ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500)'))
+        print('OK')
 
 asyncio.run(migrate())
