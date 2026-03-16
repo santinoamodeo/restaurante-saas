@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { getMenu, createOrder, MenuCategory, MenuItem, CreateOrderPayload } from '@/lib/api'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 
 interface CartItem {
   item: MenuItem
@@ -10,9 +10,10 @@ interface CartItem {
   notes: string
 }
 
-export default function RestaurantePage() {
+function RestauranteInner() {
   const params = useParams()
   const slug = params.slug as string
+  const searchParams = useSearchParams()
 
   const [tenantName, setTenantName] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#FF4D00')
@@ -27,6 +28,11 @@ export default function RestaurantePage() {
   const [activeCategory, setActiveCategory] = useState('')
   const [addedId, setAddedId] = useState<string | null>(null)
   const [form, setForm] = useState({ customer_name: '', customer_phone: '', table_number: '', notes: '' })
+
+  useEffect(() => {
+    const mesa = searchParams.get('mesa')
+    if (mesa) setForm(prev => ({ ...prev, table_number: mesa }))
+  }, [searchParams])
 
   useEffect(() => {
     getMenu(slug)
@@ -428,5 +434,13 @@ export default function RestaurantePage() {
         )}
       </div>
     </>
+  )
+}
+
+export default function RestaurantePage() {
+  return (
+    <Suspense>
+      <RestauranteInner />
+    </Suspense>
   )
 }
