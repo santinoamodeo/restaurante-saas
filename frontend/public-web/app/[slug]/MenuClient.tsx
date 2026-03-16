@@ -10,6 +10,8 @@ interface CartItem {
   notes: string
 }
 
+type OrderType = 'dine_in' | 'takeaway' | null
+
 function RestauranteInner() {
   const params = useParams()
   const slug = params.slug as string
@@ -27,12 +29,20 @@ function RestauranteInner() {
   const [orderSuccess, setOrderSuccess] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [activeCategory, setActiveCategory] = useState('')
-  const [addedId, setAddedId] = useState<string | null>(null)
   const [form, setForm] = useState({ customer_name: '', customer_phone: '', table_number: '', notes: '' })
+
+  // Welcome screen state
+  const [orderType, setOrderType] = useState<OrderType>(null)
+  const [mesaInput, setMesaInput] = useState('')
+  const [showMesaInput, setShowMesaInput] = useState(false)
+  const mesaRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const mesa = searchParams.get('mesa')
-    if (mesa) setForm(prev => ({ ...prev, table_number: mesa }))
+    if (mesa) {
+      setForm(prev => ({ ...prev, table_number: mesa }))
+      setOrderType('dine_in')
+    }
   }, [searchParams])
 
   useEffect(() => {
@@ -53,9 +63,22 @@ function RestauranteInner() {
       .finally(() => setLoading(false))
   }, [slug])
 
+  function handleDineIn() {
+    setShowMesaInput(true)
+    setTimeout(() => mesaRef.current?.focus(), 50)
+  }
+
+  function handleGoToMenu() {
+    setOrderType('dine_in')
+    setForm(prev => ({ ...prev, table_number: mesaInput.trim() }))
+  }
+
+  function handleTakeaway() {
+    setOrderType('takeaway')
+    setForm(prev => ({ ...prev, table_number: '' }))
+  }
+
   const addToCart = (item: MenuItem) => {
-    setAddedId(item.id)
-    setTimeout(() => setAddedId(null), 400)
     setCart(prev => {
       const ex = prev.find(c => c.item.id === item.id)
       if (ex) return prev.map(c => c.item.id === item.id ? { ...c, quantity: c.quantity + 1 } : c)
@@ -114,6 +137,80 @@ function RestauranteInner() {
 
     .R { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--txt); min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
+    /* ── Welcome screen ── */
+    .W {
+      min-height: 100vh; background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 20px 48px; font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      animation: wfade 0.3s ease;
+    }
+    @keyframes wfade { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
+
+    .W-brand { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 36px; }
+    .W-logo { height: 72px; max-width: 200px; object-fit: contain; }
+    .W-name {
+      font-family: 'Syne', sans-serif; font-size: clamp(26px, 7vw, 38px);
+      font-weight: 800; letter-spacing: -1px; color: var(--txt);
+      text-transform: capitalize; text-align: center;
+    }
+    .W-sub { font-size: 14px; color: var(--txt3); text-align: center; margin-top: -8px; }
+
+    .W-heading {
+      font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+      color: var(--txt2); text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 16px; text-align: center;
+    }
+
+    .W-cards { display: flex; gap: 12px; width: 100%; max-width: 420px; }
+
+    .W-card {
+      flex: 1; background: #141414; border: 1px solid var(--border);
+      border-radius: 22px; padding: 28px 16px 24px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      cursor: pointer; transition: all 0.2s; text-align: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .W-card:hover { border-color: var(--ac); background: #191919; transform: translateY(-2px); }
+    .W-card.active { border-color: var(--ac); background: var(--ac-dim); }
+
+    .W-card-icon { font-size: 40px; line-height: 1; }
+    .W-card-label { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--txt); }
+    .W-card-sub { font-size: 12px; color: var(--txt3); line-height: 1.4; }
+
+    .W-mesa-wrap {
+      width: 100%; max-width: 420px; margin-top: 16px;
+      animation: wfade 0.2s ease;
+    }
+    .W-mesa-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--txt3); display: block; margin-bottom: 8px; }
+    .W-mesa-input {
+      width: 100%; background: #141414; border: 1px solid var(--border);
+      border-radius: 14px; padding: 15px 18px;
+      font-size: 18px; font-family: 'Syne', sans-serif; font-weight: 700;
+      color: var(--txt); outline: none; transition: border-color 0.18s;
+      text-align: center; letter-spacing: 2px;
+    }
+    .W-mesa-input::placeholder { color: var(--txt3); font-weight: 400; letter-spacing: 0; font-size: 15px; }
+    .W-mesa-input:focus { border-color: var(--ac); }
+
+    .W-btn {
+      width: 100%; max-width: 420px; margin-top: 12px;
+      background: var(--ac); color: #fff; border: none;
+      border-radius: 100px; padding: 17px;
+      font-size: 16px; font-weight: 700; font-family: 'Syne', sans-serif;
+      cursor: pointer; transition: all 0.18s;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    .W-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+    .W-skip {
+      margin-top: 24px; font-size: 13px; color: var(--txt3);
+      background: none; border: none; cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: color 0.15s;
+    }
+    .W-skip:hover { color: var(--txt2); }
+
+    /* ── Header ── */
     .H {
       position: sticky; top: 0; z-index: 100;
       background: rgba(12,12,12,0.92);
@@ -125,42 +222,28 @@ function RestauranteInner() {
     .H-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
     .H-logo { height: 48px; max-width: 160px; object-fit: contain; display: block; }
     .H-name {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(20px, 6vw, 30px);
-      font-weight: 800;
-      letter-spacing: -0.8px;
-      line-height: 1;
-      color: var(--txt);
-      text-transform: capitalize;
+      font-family: 'Syne', sans-serif; font-size: clamp(20px, 6vw, 30px);
+      font-weight: 800; letter-spacing: -0.8px; line-height: 1;
+      color: var(--txt); text-transform: capitalize;
     }
+    .H-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .H-badge {
-      background: var(--ac-dim);
-      color: var(--ac);
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 5px 11px;
-      border-radius: 100px;
-      border: 1px solid var(--ac);
-      flex-shrink: 0;
-      margin-top: 2px;
+      background: var(--ac-dim); color: var(--ac);
+      font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 5px 11px; border-radius: 100px; border: 1px solid var(--ac);
+    }
+    .H-otype {
+      background: rgba(255,255,255,0.06);
+      color: var(--txt2); font-size: 10px; font-weight: 500;
+      padding: 5px 10px; border-radius: 100px;
+      border: 1px solid var(--border); white-space: nowrap;
     }
     .C-wrap { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 14px; scrollbar-width: none; }
     .C-wrap::-webkit-scrollbar { display: none; }
     .C-btn {
-      flex-shrink: 0;
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      font-weight: 400;
-      padding: 6px 15px;
-      border-radius: 100px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--txt2);
-      cursor: pointer;
-      transition: all 0.18s;
-      white-space: nowrap;
+      flex-shrink: 0; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400;
+      padding: 6px 15px; border-radius: 100px; border: 1px solid var(--border);
+      background: transparent; color: var(--txt2); cursor: pointer; transition: all 0.18s; white-space: nowrap;
     }
     .C-btn:hover { border-color: rgba(255,255,255,0.18); color: var(--txt); }
     .C-btn.on { background: var(--ac); border-color: var(--ac); color: #fff; font-weight: 500; }
@@ -168,85 +251,36 @@ function RestauranteInner() {
     .I-list { max-width: 600px; margin: 0 auto; padding: 12px 12px 140px; display: flex; flex-direction: column; gap: 8px; }
 
     .I-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 14px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      transition: border-color 0.2s, background 0.2s;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; padding: 14px;
+      display: flex; align-items: center; gap: 14px; transition: border-color 0.2s, background 0.2s;
     }
     .I-card:hover { border-color: rgba(255,255,255,0.12); background: #181818; }
-
     .I-img { width: 76px; height: 76px; border-radius: 13px; object-fit: cover; flex-shrink: 0; }
-    .I-ph {
-      width: 76px; height: 76px; border-radius: 13px;
-      background: var(--bg3);
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; color: var(--txt3); font-size: 22px;
-    }
+    .I-ph { width: 76px; height: 76px; border-radius: 13px; background: var(--bg3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--txt3); font-size: 22px; }
     .I-info { flex: 1; min-width: 0; }
     .I-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; color: var(--txt); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .I-desc { font-size: 12px; color: var(--txt2); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 7px; }
     .I-price { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; color: var(--ac); }
-
     .I-ctrl { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-
-    .Btn-add {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: var(--ac); border: none; color: #fff;
-      font-size: 20px; line-height: 1;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: transform 0.15s, filter 0.15s;
-    }
+    .Btn-add { width: 36px; height: 36px; border-radius: 50%; background: var(--ac); border: none; color: #fff; font-size: 20px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s, filter 0.15s; }
     .Btn-add:hover { filter: brightness(1.15); transform: scale(1.07); }
     .Btn-add:active { transform: scale(0.93); }
-    .Btn-sub {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: var(--bg3); border: none; color: var(--txt);
-      font-size: 18px; line-height: 1;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-    }
+    .Btn-sub { width: 32px; height: 32px; border-radius: 50%; background: var(--bg3); border: none; color: var(--txt); font-size: 18px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
     .Btn-sub:hover { background: #2a2a2a; }
     .I-qty { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; min-width: 18px; text-align: center; }
 
     .CF { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 90; }
-    .CF-empty {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(22,22,22,0.88); backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.1); color: var(--txt3);
-      padding: 12px 24px; border-radius: 100px;
-      font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; white-space: nowrap;
-      transition: all 0.2s;
-    }
+    .CF-empty { display: flex; align-items: center; gap: 8px; background: rgba(22,22,22,0.88); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); color: var(--txt3); padding: 12px 24px; border-radius: 100px; font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
     .CF-empty:hover { border-color: rgba(255,255,255,0.18); color: var(--txt2); }
-    .CF-full {
-      display: flex; align-items: center; gap: 10px;
-      background: var(--ac); color: #fff;
-      padding: 15px 26px; border-radius: 100px;
-      font-size: 15px; font-weight: 600; font-family: 'Syne', sans-serif;
-      border: none; cursor: pointer; white-space: nowrap;
-      box-shadow: 0 4px 28px rgba(0,0,0,0.55);
-      transition: all 0.2s;
-    }
+    .CF-full { display: flex; align-items: center; gap: 10px; background: var(--ac); color: #fff; padding: 15px 26px; border-radius: 100px; font-size: 15px; font-weight: 600; font-family: 'Syne', sans-serif; border: none; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 28px rgba(0,0,0,0.55); transition: all 0.2s; }
     .CF-full:hover { filter: brightness(1.1); transform: translateY(-2px); }
     .CF-pill { background: rgba(0,0,0,0.22); border-radius: 100px; padding: 2px 9px; font-size: 13px; font-weight: 700; }
 
     .OV { position: fixed; inset: 0; z-index: 110; background: rgba(0,0,0,0.72); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); animation: fadein 0.2s; }
     @keyframes fadein { from{opacity:0} to{opacity:1} }
 
-    .BS {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 120;
-      background: #141414; border: 1px solid rgba(255,255,255,0.08); border-bottom: none;
-      border-radius: 24px 24px 0 0; padding: 0 16px 28px;
-      max-height: 88vh; overflow-y: auto;
-      animation: slideup 0.3s cubic-bezier(0.32,0.72,0,1);
-      max-width: 600px; margin: 0 auto;
-    }
+    .BS { position: fixed; bottom: 0; left: 0; right: 0; z-index: 120; background: #141414; border: 1px solid rgba(255,255,255,0.08); border-bottom: none; border-radius: 24px 24px 0 0; padding: 0 16px 28px; max-height: 88vh; overflow-y: auto; animation: slideup 0.3s cubic-bezier(0.32,0.72,0,1); max-width: 600px; margin: 0 auto; }
     @keyframes slideup { from{transform:translateY(100%)} to{transform:translateY(0)} }
-
     .BS-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 12px auto 20px; }
     .BS-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--txt); margin-bottom: 18px; letter-spacing: -0.5px; }
     .BS-line { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); }
@@ -255,12 +289,7 @@ function RestauranteInner() {
     .BS-total { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
     .BS-tlabel { font-size: 12px; color: var(--txt2); letter-spacing: 0.1em; text-transform: uppercase; }
     .BS-tamount { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; color: var(--ac); letter-spacing: -0.5px; }
-    .BS-btn {
-      width: 100%; background: var(--ac); color: #fff; border: none;
-      border-radius: 14px; padding: 17px;
-      font-size: 16px; font-weight: 600; font-family: 'Syne', sans-serif;
-      cursor: pointer; margin-bottom: 8px; transition: all 0.18s;
-    }
+    .BS-btn { width: 100%; background: var(--ac); color: #fff; border: none; border-radius: 14px; padding: 17px; font-size: 16px; font-weight: 600; font-family: 'Syne', sans-serif; cursor: pointer; margin-bottom: 8px; transition: all 0.18s; }
     .BS-btn:hover { filter: brightness(1.08); }
     .BS-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
@@ -270,6 +299,7 @@ function RestauranteInner() {
     .F-input::placeholder { color: var(--txt3); }
     .F-input:focus { border-color: var(--ac); }
     .F-ta { resize: none; height: 74px; }
+    .F-otype-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--ac-dim); border: 1px solid var(--ac); border-radius: 100px; padding: 5px 12px; font-size: 12px; color: var(--ac); font-weight: 500; margin-bottom: 16px; }
 
     .LD { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); gap: 14px; }
     .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
@@ -310,12 +340,76 @@ function RestauranteInner() {
         <div className="SC-icon">🎉</div>
         <h2 className="SC-t">¡Pedido enviado!</h2>
         <p className="SC-s">En breve el restaurante<br />confirma tu pedido.</p>
-        <button className="BS-btn" style={{ maxWidth: 280 }} onClick={() => setOrderSuccess(false)}>
-          Volver al menú
+        <button className="BS-btn" style={{ maxWidth: 280 }} onClick={() => { setOrderSuccess(false); setOrderType(null); setShowMesaInput(false); setMesaInput('') }}>
+          Nuevo pedido
         </button>
       </div>
     </>
   )
+
+  // Welcome screen — only if orderType not yet chosen
+  if (orderType === null) return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <div className="W">
+        <div className="W-brand">
+          {logoUrl
+            ? <img src={logoUrl} alt={tenantName} className="W-logo" />
+            : <h1 className="W-name">{tenantName}</h1>
+          }
+          {logoUrl && <p className="W-name" style={{ fontSize: 'clamp(18px,5vw,26px)' }}>{tenantName}</p>}
+          <p className="W-sub">¿Cómo querés pedir?</p>
+        </div>
+
+        <div className="W-cards">
+          <div
+            className={`W-card${showMesaInput ? ' active' : ''}`}
+            onClick={handleDineIn}
+          >
+            <span className="W-card-icon">🪑</span>
+            <span className="W-card-label">Comer aquí</span>
+            <span className="W-card-sub">Pedido en mesa</span>
+          </div>
+          <div className="W-card" onClick={handleTakeaway}>
+            <span className="W-card-icon">🛍️</span>
+            <span className="W-card-label">Para llevar</span>
+            <span className="W-card-sub">Retirás en mostrador</span>
+          </div>
+        </div>
+
+        {showMesaInput && (
+          <div className="W-mesa-wrap">
+            <label className="W-mesa-label">Número de mesa (opcional)</label>
+            <input
+              ref={mesaRef}
+              className="W-mesa-input"
+              type="text"
+              inputMode="numeric"
+              placeholder="Ej: 4"
+              value={mesaInput}
+              onChange={e => setMesaInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleGoToMenu()}
+            />
+          </div>
+        )}
+
+        {showMesaInput && (
+          <button className="W-btn" onClick={handleGoToMenu}>
+            Ver menú →
+          </button>
+        )}
+
+        <button className="W-skip" onClick={() => setOrderType('takeaway')}>
+          Continuar sin seleccionar
+        </button>
+      </div>
+    </>
+  )
+
+  // Menu view
+  const orderTypeBadge = orderType === 'dine_in'
+    ? (form.table_number ? `🪑 Mesa ${form.table_number}` : '🪑 Comer aquí')
+    : '🛍️ Para llevar'
 
   return (
     <>
@@ -328,7 +422,10 @@ function RestauranteInner() {
                 ? <img src={logoUrl} alt={tenantName} className="H-logo" />
                 : <h1 className="H-name">{tenantName}</h1>
               }
-              <span className="H-badge">Menú digital</span>
+              <div className="H-right">
+                <span className="H-otype">{orderTypeBadge}</span>
+                <span className="H-badge">Menú</span>
+              </div>
             </div>
             <div className="C-wrap">
               {categories.map(cat => (
@@ -416,6 +513,7 @@ function RestauranteInner() {
             <div className="BS">
               <div className="BS-handle" />
               <h2 className="BS-title">Tus datos</h2>
+              <span className="F-otype-badge">{orderTypeBadge}</span>
               <div className="F-group">
                 <label className="F-label">Nombre</label>
                 <input className="F-input" placeholder="¿Cómo te llamás?" value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} />
@@ -424,10 +522,12 @@ function RestauranteInner() {
                 <label className="F-label">Teléfono (opcional)</label>
                 <input className="F-input" placeholder="2615xxxxxx" value={form.customer_phone} onChange={e => setForm({ ...form, customer_phone: e.target.value })} />
               </div>
-              <div className="F-group">
-                <label className="F-label">Mesa (opcional)</label>
-                <input className="F-input" placeholder="Ej: 4" value={form.table_number} onChange={e => setForm({ ...form, table_number: e.target.value })} />
-              </div>
+              {orderType === 'dine_in' && (
+                <div className="F-group">
+                  <label className="F-label">Mesa</label>
+                  <input className="F-input" placeholder="Ej: 4" value={form.table_number} onChange={e => setForm({ ...form, table_number: e.target.value })} />
+                </div>
+              )}
               <div className="F-group" style={{ marginBottom: 20 }}>
                 <label className="F-label">Notas</label>
                 <textarea className="F-input F-ta" placeholder="Sin cebolla, alergias, etc." value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
