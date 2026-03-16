@@ -487,6 +487,7 @@ export default function DashboardPage() {
             <div className="D-nav-links">
               <button className="D-nav-link active" onClick={() => router.push('/dashboard')}>Pedidos</button>
               <button className="D-nav-link" onClick={() => router.push('/dashboard/menu')}>Menú</button>
+              <button className="D-nav-link" onClick={() => router.push('/dashboard/qr')}>QR Mesas</button>
               <button className="D-nav-link" onClick={() => router.push('/dashboard/config')}>Config</button>
               <button className="D-nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
             </div>

@@ -9,6 +9,7 @@ router = APIRouter(prefix="/admin/config", tags=["config"])
 
 
 class TenantConfigResponse(BaseModel):
+    slug: str
     whatsapp_number: str | None
     callmebot_api_key: str | None
 
@@ -21,6 +22,7 @@ class TenantConfigUpdate(BaseModel):
 @router.get("", response_model=TenantConfigResponse)
 async def get_config(tenant: Tenant = Depends(get_current_tenant)):
     return TenantConfigResponse(
+        slug=tenant.slug,
         whatsapp_number=tenant.whatsapp_number,
         callmebot_api_key=tenant.callmebot_api_key,
     )
@@ -37,6 +39,7 @@ async def update_config(
     await db.commit()
     await db.refresh(tenant)
     return TenantConfigResponse(
+        slug=tenant.slug,
         whatsapp_number=tenant.whatsapp_number,
         callmebot_api_key=tenant.callmebot_api_key,
     )

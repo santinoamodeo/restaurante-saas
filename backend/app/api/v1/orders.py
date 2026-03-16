@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -10,6 +11,8 @@ from app.schemas.order import OrderCreate, OrderResponse, OrderStatusUpdate
 from app.services.order_service import create_order
 from app.services.whatsapp_service import send_order_notification
 import uuid
+import io
+import qrcode
 
 router = APIRouter(tags=["orders"])
 
@@ -29,6 +32,14 @@ async def place_order(
     order = await create_order(tenant.id, data, db)
     await send_order_notification(order, tenant)
     return order
+
+@router.get("/public/{tenant_slug}/qr/{table_number}")
+async def get_table_qr(tenant_slug: str, table_number: str):
+    url = f"https://restaurante-saas-alpha.vercel.app/{tenant_slug}?mesa={table_number}"
+    img = qrcode.make(url)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return Response(content=buf.getvalue(), media_type="image/png")
 
 # ── Admin ────────────────────────────────────────────────────
 
