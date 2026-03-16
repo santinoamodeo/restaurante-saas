@@ -16,6 +16,7 @@ export default function MenuPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [items, setItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState('')
   const [showCatForm, setShowCatForm] = useState(false)
   const [showItemForm, setShowItemForm] = useState(false)
@@ -32,6 +33,18 @@ export default function MenuPage() {
     if (!token) { router.push('/'); return }
     setAuthToken(token)
     loadData()
+    import('@/lib/api').then(({ api }) =>
+      api.get('/api/v1/admin/config').then(res => {
+        const url = res.data.logo_url
+        if (url) {
+          setLogoUrl(url)
+          const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]') || document.createElement('link')
+          link.rel = 'icon'
+          link.href = url
+          document.head.appendChild(link)
+        }
+      }).catch(() => {})
+    )
   }, [])
 
   async function loadData() {
@@ -127,6 +140,8 @@ export default function MenuPage() {
     .M-nav-left { display: flex; align-items: center; gap: 10px; }
     .M-nav-back { width: 32px; height: 32px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--txt2); font-size: 14px; transition: all 0.15s; }
     .M-nav-back:hover { color: var(--txt); border-color: var(--border2); }
+    .M-nav-logo { width: 32px; height: 32px; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+    .M-nav-logo img { width: 100%; height: 100%; object-fit: contain; }
     .M-nav-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt); }
     .M-nav-exit { padding: 6px 12px; border-radius: 8px; font-size: 13px; color: var(--txt3); cursor: pointer; transition: all 0.15s; border: none; background: transparent; font-family: 'Inter', sans-serif; }
     .M-nav-exit:hover { color: #f87171; background: rgba(239,68,68,0.08); }
@@ -229,6 +244,7 @@ export default function MenuPage() {
           <div className="M-nav-in">
             <div className="M-nav-left">
               <button className="M-nav-back" onClick={() => router.push('/dashboard')}>←</button>
+              {logoUrl && <div className="M-nav-logo"><img src={logoUrl} alt="Logo" /></div>}
               <span className="M-nav-title">Gestión de Menú</span>
             </div>
             <button className="M-nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>

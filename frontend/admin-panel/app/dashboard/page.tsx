@@ -84,6 +84,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [historialOpen, setHistorialOpen] = useState(false)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
   function playBeep() {
     try {
@@ -109,6 +110,18 @@ export default function DashboardPage() {
     if (!token) { router.push('/'); return }
     setAuthToken(token)
     loadOrders()
+    import('@/lib/api').then(({ api }) =>
+      api.get('/api/v1/admin/config').then(res => {
+        const url = res.data.logo_url
+        if (url) {
+          setLogoUrl(url)
+          const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]') || document.createElement('link')
+          link.rel = 'icon'
+          link.href = url
+          document.head.appendChild(link)
+        }
+      }).catch(() => {})
+    )
 
     const interval = setInterval(async () => {
       try {
@@ -197,8 +210,9 @@ export default function DashboardPage() {
       border: 1px solid rgba(232,93,4,0.2);
       border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 15px;
+      font-size: 15px; overflow: hidden; flex-shrink: 0;
     }
+    .D-nav-logo img { width: 100%; height: 100%; object-fit: contain; }
     .D-nav-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt); }
 
     .D-nav-links { display: flex; align-items: center; gap: 4px; }
@@ -481,7 +495,9 @@ export default function DashboardPage() {
         <nav className="D-nav">
           <div className="D-nav-in">
             <div className="D-nav-left">
-              <div className="D-nav-logo">🍽️</div>
+              <div className="D-nav-logo">
+                {logoUrl ? <img src={logoUrl} alt="Logo" /> : '🍽️'}
+              </div>
               <span className="D-nav-title">Panel Admin</span>
             </div>
             <div className="D-nav-links">

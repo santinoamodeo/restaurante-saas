@@ -34,7 +34,14 @@ export default function ConfigPage() {
       setWhatsapp(res.data.whatsapp_number || '')
       setApiKey(res.data.callmebot_api_key || '')
       setPrimaryColor(res.data.primary_color || '#E85D04')
-      setLogoUrl(res.data.logo_url || null)
+      const url = res.data.logo_url || null
+      setLogoUrl(url)
+      if (url) {
+        const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]') || document.createElement('link')
+        link.rel = 'icon'
+        link.href = url
+        document.head.appendChild(link)
+      }
     } catch {
       removeToken(); router.push('/')
     } finally {
@@ -98,6 +105,8 @@ export default function ConfigPage() {
     .C-nav-left { display: flex; align-items: center; gap: 10px; }
     .C-nav-back { width: 32px; height: 32px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--txt2); font-size: 14px; transition: all 0.15s; }
     .C-nav-back:hover { color: var(--txt); border-color: var(--border2); }
+    .C-nav-logo { width: 32px; height: 32px; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+    .C-nav-logo img { width: 100%; height: 100%; object-fit: contain; }
     .C-nav-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt); }
     .C-nav-exit { padding: 6px 12px; border-radius: 8px; font-size: 13px; color: var(--txt3); cursor: pointer; transition: all 0.15s; border: none; background: transparent; font-family: 'Inter', sans-serif; }
     .C-nav-exit:hover { color: #f87171; background: rgba(239,68,68,0.08); }
@@ -191,6 +200,7 @@ export default function ConfigPage() {
           <div className="C-nav-in">
             <div className="C-nav-left">
               <button className="C-nav-back" onClick={() => router.push('/dashboard')}>←</button>
+              {logoUrl && <div className="C-nav-logo"><img src={logoUrl} alt="Logo" /></div>}
               <span className="C-nav-title">Configuración</span>
             </div>
             <button className="C-nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
