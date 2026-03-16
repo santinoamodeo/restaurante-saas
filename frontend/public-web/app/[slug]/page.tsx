@@ -13,6 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: `${name} — Menú digital`,
       description: `Pedí online en ${name}. Menú digital con delivery y take away.`,
       ...(data.logo_url ? { icons: { icon: data.logo_url, apple: data.logo_url } } : {}),
+      ...(data.primary_color ? { themeColor: data.primary_color } : {}),
     }
   } catch {
     return {
