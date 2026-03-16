@@ -17,6 +17,7 @@ export default function MenuPage() {
   const [items, setItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [activeCategory, setActiveCategory] = useState('')
   const [showCatForm, setShowCatForm] = useState(false)
   const [showItemForm, setShowItemForm] = useState(false)
@@ -145,6 +146,18 @@ export default function MenuPage() {
     .M-nav-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt); }
     .M-nav-exit { padding: 6px 12px; border-radius: 8px; font-size: 13px; color: var(--txt3); cursor: pointer; transition: all 0.15s; border: none; background: transparent; font-family: 'Inter', sans-serif; }
     .M-nav-exit:hover { color: #f87171; background: rgba(239,68,68,0.08); }
+    .M-burger { display: none; background: none; border: none; color: var(--txt); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; }
+    .M-drawer-ov { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+    .M-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: #141414; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: mdrw .2s ease; }
+    @keyframes mdrw { from { transform: translateX(100%) } to { transform: translateX(0) } }
+    .M-drawer-link { padding: 12px 14px; border-radius: 10px; font-size: 14px; color: var(--txt2); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; text-align: left; width: 100%; transition: all 0.15s; }
+    .M-drawer-link:hover { color: var(--txt); background: rgba(255,255,255,0.06); }
+    .M-drawer-exit { color: #f87171; }
+    .M-drawer-exit:hover { background: rgba(239,68,68,0.08) !important; }
+    @media (max-width: 640px) {
+      .M-nav-exit { display: none; }
+      .M-burger { display: block; }
+    }
 
     .M-body { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; display: grid; grid-template-columns: 220px 1fr; gap: 16px; }
 
@@ -248,6 +261,7 @@ export default function MenuPage() {
               <span className="M-nav-title">Gestión de Menú</span>
             </div>
             <button className="M-nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
+            <button className="M-burger" onClick={() => setDrawerOpen(true)}>☰</button>
           </div>
         </nav>
 
@@ -359,6 +373,19 @@ export default function MenuPage() {
           </div>
         </div>
       </div>
+
+      {drawerOpen && (
+        <>
+          <div className="M-drawer-ov" onClick={() => setDrawerOpen(false)} />
+          <div className="M-drawer">
+            <button className="M-drawer-link" onClick={() => { router.push('/dashboard'); setDrawerOpen(false) }}>Pedidos</button>
+            <button className="M-drawer-link" onClick={() => { router.push('/dashboard/menu'); setDrawerOpen(false) }}>Menú</button>
+            <button className="M-drawer-link" onClick={() => { router.push('/dashboard/qr'); setDrawerOpen(false) }}>QR Mesas</button>
+            <button className="M-drawer-link" onClick={() => { router.push('/dashboard/config'); setDrawerOpen(false) }}>Config</button>
+            <button className="M-drawer-link M-drawer-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
+          </div>
+        </>
+      )}
     </>
   )
 }

@@ -10,6 +10,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 export default function QRPage() {
   const router = useRouter()
   const [slug, setSlug] = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [mesa, setMesa] = useState('')
   const [desde, setDesde] = useState('1')
   const [hasta, setHasta] = useState('10')
@@ -104,6 +105,19 @@ export default function QRPage() {
       cursor: pointer; transition: all 0.15s; border: none; background: transparent; font-family: 'Inter', sans-serif;
     }
     .Q-nav-exit:hover { color: #f87171; background: rgba(239,68,68,0.08); }
+    .Q-burger { display: none; background: none; border: none; color: var(--txt); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; }
+    .Q-drawer-ov { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+    .Q-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: #141414; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: qdrw .2s ease; }
+    @keyframes qdrw { from { transform: translateX(100%) } to { transform: translateX(0) } }
+    .Q-drawer-link { padding: 12px 14px; border-radius: 10px; font-size: 14px; color: var(--txt2); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; text-align: left; width: 100%; transition: all 0.15s; }
+    .Q-drawer-link:hover { color: var(--txt); background: rgba(255,255,255,0.06); }
+    .Q-drawer-exit { color: #f87171; }
+    .Q-drawer-exit:hover { background: rgba(239,68,68,0.08) !important; }
+    @media (max-width: 640px) {
+      .Q-nav-links { display: none; }
+      .Q-nav-exit { display: none; }
+      .Q-burger { display: block; }
+    }
 
     .Q-body { max-width: 900px; margin: 0 auto; padding: 32px 20px 60px; }
 
@@ -209,6 +223,7 @@ export default function QRPage() {
               <button className="Q-nav-link" onClick={() => router.push('/dashboard/config')}>Config</button>
               <button className="Q-nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
             </div>
+            <button className="Q-burger" onClick={() => setDrawerOpen(true)}>☰</button>
           </div>
         </nav>
 
@@ -309,6 +324,19 @@ export default function QRPage() {
           </div>
         </div>
       </div>
+
+      {drawerOpen && (
+        <>
+          <div className="Q-drawer-ov" onClick={() => setDrawerOpen(false)} />
+          <div className="Q-drawer">
+            <button className="Q-drawer-link" onClick={() => { router.push('/dashboard'); setDrawerOpen(false) }}>Pedidos</button>
+            <button className="Q-drawer-link" onClick={() => { router.push('/dashboard/menu'); setDrawerOpen(false) }}>Menú</button>
+            <button className="Q-drawer-link" onClick={() => { router.push('/dashboard/qr'); setDrawerOpen(false) }}>QR Mesas</button>
+            <button className="Q-drawer-link" onClick={() => { router.push('/dashboard/config'); setDrawerOpen(false) }}>Config</button>
+            <button className="Q-drawer-link Q-drawer-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
+          </div>
+        </>
+      )}
     </>
   )
 }

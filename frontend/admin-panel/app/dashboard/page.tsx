@@ -85,6 +85,7 @@ export default function DashboardPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [historialOpen, setHistorialOpen] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   function playBeep() {
     try {
@@ -216,6 +217,18 @@ export default function DashboardPage() {
     .D-nav-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt); }
 
     .D-nav-links { display: flex; align-items: center; gap: 4px; }
+    .D-burger { display: none; background: none; border: none; color: var(--txt); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; }
+    .D-drawer-ov { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+    .D-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: #141414; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: drw .2s ease; }
+    @keyframes drw { from { transform: translateX(100%) } to { transform: translateX(0) } }
+    .D-drawer-link { padding: 12px 14px; border-radius: 10px; font-size: 14px; color: var(--txt2); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; text-align: left; width: 100%; transition: all 0.15s; }
+    .D-drawer-link:hover { color: var(--txt); background: rgba(255,255,255,0.06); }
+    .D-drawer-exit { color: #f87171; }
+    .D-drawer-exit:hover { background: rgba(239,68,68,0.08) !important; }
+    @media (max-width: 640px) {
+      .D-nav-links { display: none; }
+      .D-burger { display: block; }
+    }
     .D-nav-link {
       padding: 6px 12px; border-radius: 8px;
       font-size: 13px; color: var(--txt2);
@@ -507,6 +520,7 @@ export default function DashboardPage() {
               <button className="D-nav-link" onClick={() => router.push('/dashboard/config')}>Config</button>
               <button className="D-nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
             </div>
+            <button className="D-burger" onClick={() => setDrawerOpen(true)}>☰</button>
           </div>
         </nav>
 
@@ -587,6 +601,19 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {drawerOpen && (
+        <>
+          <div className="D-drawer-ov" onClick={() => setDrawerOpen(false)} />
+          <div className="D-drawer">
+            <button className="D-drawer-link" onClick={() => { router.push('/dashboard'); setDrawerOpen(false) }}>Pedidos</button>
+            <button className="D-drawer-link" onClick={() => { router.push('/dashboard/menu'); setDrawerOpen(false) }}>Menú</button>
+            <button className="D-drawer-link" onClick={() => { router.push('/dashboard/qr'); setDrawerOpen(false) }}>QR Mesas</button>
+            <button className="D-drawer-link" onClick={() => { router.push('/dashboard/config'); setDrawerOpen(false) }}>Config</button>
+            <button className="D-drawer-link D-drawer-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
+          </div>
+        </>
+      )}
     </>
   )
 }

@@ -17,6 +17,7 @@ export default function ConfigPage() {
   const logoInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
@@ -110,6 +111,18 @@ export default function ConfigPage() {
     .C-nav-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt); }
     .C-nav-exit { padding: 6px 12px; border-radius: 8px; font-size: 13px; color: var(--txt3); cursor: pointer; transition: all 0.15s; border: none; background: transparent; font-family: 'Inter', sans-serif; }
     .C-nav-exit:hover { color: #f87171; background: rgba(239,68,68,0.08); }
+    .C-burger { display: none; background: none; border: none; color: var(--txt); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; }
+    .C-drawer-ov { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+    .C-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: #141414; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: cdrw .2s ease; }
+    @keyframes cdrw { from { transform: translateX(100%) } to { transform: translateX(0) } }
+    .C-drawer-link { padding: 12px 14px; border-radius: 10px; font-size: 14px; color: var(--txt2); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; text-align: left; width: 100%; transition: all 0.15s; }
+    .C-drawer-link:hover { color: var(--txt); background: rgba(255,255,255,0.06); }
+    .C-drawer-exit { color: #f87171; }
+    .C-drawer-exit:hover { background: rgba(239,68,68,0.08) !important; }
+    @media (max-width: 640px) {
+      .C-nav-exit { display: none; }
+      .C-burger { display: block; }
+    }
 
     .C-body { max-width: 640px; margin: 0 auto; padding: 32px 20px 60px; }
 
@@ -204,6 +217,7 @@ export default function ConfigPage() {
               <span className="C-nav-title">Configuración</span>
             </div>
             <button className="C-nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
+            <button className="C-burger" onClick={() => setDrawerOpen(true)}>☰</button>
           </div>
         </nav>
 
@@ -339,6 +353,19 @@ export default function ConfigPage() {
           </button>
         </div>
       </div>
+
+      {drawerOpen && (
+        <>
+          <div className="C-drawer-ov" onClick={() => setDrawerOpen(false)} />
+          <div className="C-drawer">
+            <button className="C-drawer-link" onClick={() => { router.push('/dashboard'); setDrawerOpen(false) }}>Pedidos</button>
+            <button className="C-drawer-link" onClick={() => { router.push('/dashboard/menu'); setDrawerOpen(false) }}>Menú</button>
+            <button className="C-drawer-link" onClick={() => { router.push('/dashboard/qr'); setDrawerOpen(false) }}>QR Mesas</button>
+            <button className="C-drawer-link" onClick={() => { router.push('/dashboard/config'); setDrawerOpen(false) }}>Config</button>
+            <button className="C-drawer-link C-drawer-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
+          </div>
+        </>
+      )}
     </>
   )
 }
