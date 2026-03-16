@@ -24,7 +24,9 @@ export async function createTenant(data: {
   admin_email: string
   admin_password: string
 }) {
-  const res = await api.post('/api/v1/superadmin/tenants', data)
+  const res = await api.post('/api/v1/superadmin/tenants', data, {
+    headers: { 'X-Setup-Key': process.env.NEXT_PUBLIC_SETUP_KEY },
+  })
   return res.data
 }
 
