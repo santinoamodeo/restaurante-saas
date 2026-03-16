@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 día
 
+    SETUP_SECRET_KEY: str = "cambiar-esto"
+
     CALLMEBOT_API_KEY: str = ""
 
     CLOUDINARY_CLOUD_NAME: str = "dpz6a4lir"

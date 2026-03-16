@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.database import get_db
 from app.core.security import hash_password
+from app.core.config import settings
 from app.models.tenant import Tenant
 from app.models.user import User, UserRole
 from pydantic import BaseModel
@@ -17,7 +18,13 @@ class SetupRequest(BaseModel):
     admin_password: str
 
 @router.post("/create-tenant")
-async def create_tenant(data: SetupRequest, db: AsyncSession = Depends(get_db)):
+async def create_tenant(
+    data: SetupRequest,
+    db: AsyncSession = Depends(get_db),
+    x_setup_key: str = Header(default=None),
+):
+    if x_setup_key != settings.SETUP_SECRET_KEY:
+        raise HTTPException(status_code=403, detail="Clave de setup inválida")
     # Verificar que el slug no exista
     result = await db.execute(select(Tenant).where(Tenant.slug == data.tenant_slug))
     if result.scalar_one_or_none():
