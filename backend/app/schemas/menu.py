@@ -62,4 +62,5 @@ class CategoryWithItems(BaseModel):
 class PublicMenuResponse(BaseModel):
     tenant_name: str
     primary_color: str
+    logo_url: str | None = None
     categories: list[CategoryWithItems]

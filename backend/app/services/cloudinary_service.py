@@ -12,13 +12,13 @@ def _configure():
     )
 
 
-async def upload_image(file_bytes: bytes, public_id: str) -> str:
+async def upload_image(file_bytes: bytes, public_id: str, folder: str = "restaurante-saas/menu") -> str:
     """Sube imagen a Cloudinary y devuelve la URL segura."""
     _configure()
     result = cloudinary.uploader.upload(
         file_bytes,
         public_id=public_id,
         overwrite=True,
-        folder="restaurante-saas/menu",
+        folder=folder,
     )
     return result["secure_url"]

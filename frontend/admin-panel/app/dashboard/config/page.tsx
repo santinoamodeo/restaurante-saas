@@ -1,15 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getToken, removeToken } from '@/lib/auth'
 import { setAuthToken } from '@/lib/api'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
 export default function ConfigPage() {
   const router = useRouter()
   const [whatsapp, setWhatsapp] = useState('')
   const [apiKey, setApiKey] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#E85D04')
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const logoInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -29,10 +34,31 @@ export default function ConfigPage() {
       setWhatsapp(res.data.whatsapp_number || '')
       setApiKey(res.data.callmebot_api_key || '')
       setPrimaryColor(res.data.primary_color || '#E85D04')
+      setLogoUrl(res.data.logo_url || null)
     } catch {
       removeToken(); router.push('/')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingLogo(true)
+    try {
+      const { api } = await import('@/lib/api')
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await api.post('/api/v1/admin/config/logo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setLogoUrl(res.data.logo_url)
+    } catch {
+      setError('Error al subir el logo.')
+    } finally {
+      setUploadingLogo(false)
+      if (logoInputRef.current) logoInputRef.current.value = ''
     }
   }
 
@@ -109,6 +135,25 @@ export default function ConfigPage() {
     .C-info-num { width: 20px; height: 20px; background: var(--ac-dim); border: 1px solid rgba(232,93,4,0.2); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--ac); font-weight: 600; flex-shrink: 0; margin-top: 1px; }
     .C-info-text { font-size: 13px; color: var(--txt3); line-height: 1.5; }
     .C-info-text code { background: rgba(255,255,255,0.07); padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--txt2); }
+
+    .C-logo-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .C-logo-preview {
+      width: 96px; height: 96px; border-radius: 14px;
+      border: 1px solid var(--border); background: var(--bg3);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .C-logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+    .C-logo-empty { font-size: 28px; opacity: 0.3; }
+    .C-logo-actions { display: flex; flex-direction: column; gap: 8px; }
+    .C-logo-btn {
+      padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      font-family: 'Syne', sans-serif; cursor: pointer; transition: all 0.15s;
+      border: 1px solid var(--border); background: var(--bg3); color: var(--txt2);
+    }
+    .C-logo-btn:hover { color: var(--txt); border-color: var(--border2); }
+    .C-logo-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .C-logo-hint { font-size: 12px; color: var(--txt3); }
 
     .C-color-row { display: flex; align-items: center; gap: 14px; }
     .C-color-input {
@@ -202,6 +247,45 @@ export default function ConfigPage() {
                 <div className="C-info-num">3</div>
                 <p className="C-info-text">Te responde con tu API key. Copiala acá arriba.</p>
               </div>
+            </div>
+          </div>
+
+          <div className="C-section">
+            <div className="C-section-head">
+              <div className="C-section-icon">🖼️</div>
+              <div>
+                <p className="C-section-title">Logo</p>
+                <p className="C-section-sub">Se muestra en el encabezado del menú público</p>
+              </div>
+            </div>
+
+            <div className="C-group">
+              <label className="C-label">Logo del restaurante</label>
+              <div className="C-logo-row">
+                <div className="C-logo-preview">
+                  {logoUrl
+                    ? <img src={logoUrl} alt="Logo" />
+                    : <span className="C-logo-empty">🍽️</span>
+                  }
+                </div>
+                <div className="C-logo-actions">
+                  <button
+                    className="C-logo-btn"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={uploadingLogo}
+                  >
+                    {uploadingLogo ? 'Subiendo...' : logoUrl ? '↑ Cambiar logo' : '↑ Subir logo'}
+                  </button>
+                  <p className="C-logo-hint">PNG, JPG o SVG. Recomendado: 512×512px</p>
+                </div>
+              </div>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleLogoUpload}
+              />
             </div>
           </div>
 

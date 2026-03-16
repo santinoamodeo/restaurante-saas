@@ -36,6 +36,7 @@ async def get_public_menu(tenant_slug: str, db: AsyncSession = Depends(get_db)):
     return PublicMenuResponse(
         tenant_name=tenant.name,
         primary_color=tenant.primary_color,
+        logo_url=tenant.logo_url,
         categories=categories,
     )
 

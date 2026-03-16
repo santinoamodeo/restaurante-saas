@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from app.core.database import get_db
 from app.core.deps import get_current_tenant
 from app.models.tenant import Tenant
+from app.services.cloudinary_service import upload_image
 
 router = APIRouter(prefix="/admin/config", tags=["config"])
 
@@ -13,6 +14,7 @@ class TenantConfigResponse(BaseModel):
     whatsapp_number: str | None
     callmebot_api_key: str | None
     primary_color: str
+    logo_url: str | None
 
 
 class TenantConfigUpdate(BaseModel):
@@ -28,6 +30,7 @@ async def get_config(tenant: Tenant = Depends(get_current_tenant)):
         whatsapp_number=tenant.whatsapp_number,
         callmebot_api_key=tenant.callmebot_api_key,
         primary_color=tenant.primary_color,
+        logo_url=tenant.logo_url,
     )
 
 
@@ -48,4 +51,18 @@ async def update_config(
         whatsapp_number=tenant.whatsapp_number,
         callmebot_api_key=tenant.callmebot_api_key,
         primary_color=tenant.primary_color,
+        logo_url=tenant.logo_url,
     )
+
+
+@router.post("/logo")
+async def upload_logo(
+    file: UploadFile = File(...),
+    tenant: Tenant = Depends(get_current_tenant),
+    db: AsyncSession = Depends(get_db),
+):
+    contents = await file.read()
+    url = await upload_image(contents, f"logo_{tenant.slug}", folder="restaurante-saas/logos")
+    tenant.logo_url = url
+    await db.commit()
+    return {"logo_url": url}

@@ -12,6 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {
       title: `${name} — Menú digital`,
       description: `Pedí online en ${name}. Menú digital con delivery y take away.`,
+      ...(data.logo_url ? { icons: { icon: data.logo_url } } : {}),
     }
   } catch {
     return {

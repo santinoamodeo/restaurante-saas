@@ -17,6 +17,7 @@ function RestauranteInner() {
 
   const [tenantName, setTenantName] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#FF4D00')
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -42,6 +43,7 @@ function RestauranteInner() {
         const color = data.primary_color || '#FF4D00'
         setTenantName(name)
         setPrimaryColor(color)
+        setLogoUrl(data.logo_url || null)
         setCategories(cats)
         if (cats.length > 0) setActiveCategory(cats[0].id)
         document.documentElement.style.setProperty('--ac', color)
@@ -120,7 +122,8 @@ function RestauranteInner() {
       border-bottom: 1px solid var(--border);
     }
     .H-in { max-width: 600px; margin: 0 auto; padding: 18px 16px 0; }
-    .H-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+    .H-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+    .H-logo { height: 48px; max-width: 160px; object-fit: contain; display: block; }
     .H-name {
       font-family: 'Syne', sans-serif;
       font-size: clamp(20px, 6vw, 30px);
@@ -321,7 +324,10 @@ function RestauranteInner() {
         <header className="H">
           <div className="H-in">
             <div className="H-top">
-              <h1 className="H-name">{tenantName}</h1>
+              {logoUrl
+                ? <img src={logoUrl} alt={tenantName} className="H-logo" />
+                : <h1 className="H-name">{tenantName}</h1>
+              }
               <span className="H-badge">Menú digital</span>
             </div>
             <div className="C-wrap">
