@@ -1,23 +1,11 @@
 import asyncio
-from app.core.database import AsyncSessionLocal
-from app.models.user import User, UserRole
-from app.core.security import hash_password
-import uuid
-from datetime import datetime
+from app.core.database import engine
+from sqlalchemy import text
 
-async def create():
-    async with AsyncSessionLocal() as db:
-        user = User(
-            id=uuid.uuid4(),
-            tenant_id=None,
-            email='santino@superadmin.com',
-            hashed_password=hash_password('superadmin123'),
-            role=UserRole.superadmin,
-            is_active=True,
-            created_at=datetime.utcnow()
-        )
-        db.add(user)
-        await db.commit()
-        print('Superadmin creado OK')
+async def migrate():
+    async with engine.begin() as conn:
+        await conn.execute(text("ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'superadmin'"))
+        await conn.execute(text("ALTER TABLE users ALTER COLUMN tenant_id DROP NOT NULL"))
+        print('Migraciones Neon OK')
 
-asyncio.run(create())
+asyncio.run(migrate())
