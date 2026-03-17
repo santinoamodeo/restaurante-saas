@@ -91,8 +91,8 @@ function RestauranteInner() {
     } catch { return [] }
   }
 
-  const refreshOrderStatuses = async (orders: StoredOrder[]) => {
-    setRefreshingOrders(true)
+  const refreshOrderStatuses = async (orders: StoredOrder[], silent = false) => {
+    if (!silent) setRefreshingOrders(true)
     const updated = await Promise.all(orders.map(async o => {
       if (o.status === 'delivered' || o.status === 'cancelled') return o
       try {
@@ -101,6 +101,7 @@ function RestauranteInner() {
       } catch {}
       return o
     }))
+    // Always update state — this makes activeOrder recompute and excludes terminal orders
     setMyOrders(updated)
     // Sync updated statuses back to localStorage
     try {
@@ -108,7 +109,7 @@ function RestauranteInner() {
       const map = new Map(updated.map(o => [o.id, o]))
       localStorage.setItem('eatly_orders', JSON.stringify(all.map((o: any) => map.get(o.id) || o)))
     } catch {}
-    setRefreshingOrders(false)
+    if (!silent) setRefreshingOrders(false)
   }
 
   const deleteFinished = () => {
@@ -124,6 +125,9 @@ function RestauranteInner() {
   useEffect(() => {
     const orders = readLocalOrders()
     setMyOrders(orders)
+    // Silent background refresh so welcome screen reflects real server status
+    const active = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled')
+    if (active.length > 0) refreshOrderStatuses(orders, true)
   }, [slug])
 
   useEffect(() => {
