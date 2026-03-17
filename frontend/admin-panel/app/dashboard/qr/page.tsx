@@ -7,23 +7,6 @@ import { setAuthToken, getTenantConfig } from '@/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
-const LIGHT_THEME: Record<string, string> = {
-  '--bg': '#FAFAFA', '--bg2': '#FFFFFF', '--bg3': '#F0F0F0',
-  '--border': 'rgba(0,0,0,0.08)', '--border2': 'rgba(0,0,0,0.15)',
-  '--txt': '#1a1a1a', '--txt2': 'rgba(0,0,0,0.5)', '--txt3': 'rgba(0,0,0,0.3)',
-}
-const DARK_THEME: Record<string, string> = {
-  '--bg': '#0C0C0C', '--bg2': '#141414', '--bg3': '#1C1C1C',
-  '--border': 'rgba(255,255,255,0.07)', '--border2': 'rgba(255,255,255,0.12)',
-  '--txt': '#FFFFFF', '--txt2': 'rgba(255,255,255,0.45)', '--txt3': 'rgba(255,255,255,0.2)',
-}
-function applyTheme(isDark: boolean) {
-  const vars = isDark ? DARK_THEME : LIGHT_THEME
-  const root = document.documentElement
-  Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v))
-  localStorage.setItem('eatly_theme', isDark ? 'dark' : 'light')
-}
-
 export default function QRPage() {
   const router = useRouter()
   const [slug, setSlug] = useState<string | null>(null)
@@ -33,16 +16,6 @@ export default function QRPage() {
   const [hasta, setHasta] = useState('10')
   const [multi, setMulti] = useState(false)
   const [previewMesa, setPreviewMesa] = useState<string | null>(null)
-  const [dark, setDark] = useState(true)
-
-  useEffect(() => {
-    const saved = localStorage.getItem('eatly_theme')
-    const isDark = saved !== 'light'
-    setDark(isDark)
-    applyTheme(isDark)
-  }, [])
-
-  function toggleTheme() { const next = !dark; setDark(next); applyTheme(next) }
 
   useEffect(() => {
     const token = getToken()
@@ -132,19 +105,12 @@ export default function QRPage() {
       cursor: pointer; transition: all 0.15s; border: none; background: transparent; font-family: 'Inter', sans-serif;
     }
     .Q-nav-exit:hover { color: #f87171; background: rgba(239,68,68,0.08); }
-    .Q-theme-btn {
-      width: 32px; height: 32px; border-radius: 8px;
-      background: var(--bg3); border: 1px solid var(--border);
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      font-size: 15px; transition: all 0.15s; flex-shrink: 0;
-    }
-    .Q-theme-btn:hover { border-color: var(--border2); }
     .Q-burger { display: none; background: none; border: none; color: var(--txt); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; }
     .Q-drawer-ov { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
     .Q-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: var(--bg2); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: qdrw .2s ease; }
     @keyframes qdrw { from { transform: translateX(100%) } to { transform: translateX(0) } }
     .Q-drawer-link { padding: 12px 14px; border-radius: 10px; font-size: 14px; color: var(--txt2); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; text-align: left; width: 100%; transition: all 0.15s; }
-    .Q-drawer-link:hover { color: var(--txt); background: var(--bg3); }
+    .Q-drawer-link:hover { color: var(--txt); background: rgba(255,255,255,0.06); }
     .Q-drawer-exit { color: #f87171; }
     .Q-drawer-exit:hover { background: rgba(239,68,68,0.08) !important; }
     @media (max-width: 640px) {
@@ -229,7 +195,7 @@ export default function QRPage() {
     .Q-warn { font-size: 12px; color: #f87171; margin-top: 8px; }
 
     .LD { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
-    .LD-ring { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg) } }
   `
 
@@ -257,7 +223,6 @@ export default function QRPage() {
               <button className="Q-nav-link" onClick={() => router.push('/dashboard/config')}>Config</button>
               <button className="Q-nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
             </div>
-            <button className="Q-theme-btn" onClick={toggleTheme} title="Cambiar tema">{dark ? '☀️' : '🌙'}</button>
             <button className="Q-burger" onClick={() => setDrawerOpen(true)}>☰</button>
           </div>
         </nav>

@@ -78,23 +78,6 @@ const NEXT_LABEL: Record<string, string> = {
   ready: 'Entregado',
 }
 
-const LIGHT_THEME: Record<string, string> = {
-  '--bg': '#FAFAFA', '--bg2': '#FFFFFF', '--bg3': '#F0F0F0',
-  '--border': 'rgba(0,0,0,0.08)', '--border2': 'rgba(0,0,0,0.15)',
-  '--txt': '#1a1a1a', '--txt2': 'rgba(0,0,0,0.5)', '--txt3': 'rgba(0,0,0,0.3)',
-}
-const DARK_THEME: Record<string, string> = {
-  '--bg': '#0C0C0C', '--bg2': '#141414', '--bg3': '#1C1C1C',
-  '--border': 'rgba(255,255,255,0.07)', '--border2': 'rgba(255,255,255,0.12)',
-  '--txt': '#FFFFFF', '--txt2': 'rgba(255,255,255,0.45)', '--txt3': 'rgba(255,255,255,0.2)',
-}
-function applyTheme(isDark: boolean) {
-  const vars = isDark ? DARK_THEME : LIGHT_THEME
-  const root = document.documentElement
-  Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v))
-  localStorage.setItem('eatly_theme', isDark ? 'dark' : 'light')
-}
-
 export default function DashboardPage() {
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
@@ -103,16 +86,6 @@ export default function DashboardPage() {
   const [historialOpen, setHistorialOpen] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [dark, setDark] = useState(true)
-
-  useEffect(() => {
-    const saved = localStorage.getItem('eatly_theme')
-    const isDark = saved !== 'light'
-    setDark(isDark)
-    applyTheme(isDark)
-  }, [])
-
-  function toggleTheme() { const next = !dark; setDark(next); applyTheme(next) }
 
   function playBeep() {
     try {
@@ -249,7 +222,7 @@ export default function DashboardPage() {
     .D-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: var(--bg2); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: drw .2s ease; }
     @keyframes drw { from { transform: translateX(100%) } to { transform: translateX(0) } }
     .D-drawer-link { padding: 12px 14px; border-radius: 10px; font-size: 14px; color: var(--txt2); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; text-align: left; width: 100%; transition: all 0.15s; }
-    .D-drawer-link:hover { color: var(--txt); background: var(--bg3); }
+    .D-drawer-link:hover { color: var(--txt); background: rgba(255,255,255,0.06); }
     .D-drawer-exit { color: #f87171; }
     .D-drawer-exit:hover { background: rgba(239,68,68,0.08) !important; }
     @media (max-width: 640px) {
@@ -273,14 +246,6 @@ export default function DashboardPage() {
       font-family: 'Inter', sans-serif;
     }
     .D-nav-exit:hover { color: #f87171; background: rgba(239,68,68,0.08); }
-    .D-theme-btn {
-      width: 32px; height: 32px; border-radius: 8px;
-      background: var(--bg3); border: 1px solid var(--border);
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      font-size: 15px; transition: all 0.15s; flex-shrink: 0;
-    }
-    .D-theme-btn:hover { border-color: var(--border2); }
-
     .D-body { max-width: 1400px; margin: 0 auto; padding: 24px 20px 60px; }
 
     .D-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
@@ -337,7 +302,7 @@ export default function DashboardPage() {
     .D-col-badge.orange { background: rgba(232,93,4,0.15);  color: #E85D04; }
     .D-col-badge.blue   { background: rgba(59,130,246,0.15); color: #60a5fa; }
     .D-col-badge.green  { background: rgba(34,197,94,0.15);  color: #22c55e; }
-    .D-col-badge.dim    { background: var(--bg3); color: var(--txt3); }
+    .D-col-badge.dim    { background: rgba(255,255,255,0.06); color: var(--txt3); }
 
     .D-col-toggle {
       background: none; border: none; cursor: pointer;
@@ -409,7 +374,7 @@ export default function DashboardPage() {
     }
 
     .D-items-list { margin-bottom: 14px; }
-    .D-item-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .D-item-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
     .D-item-row:last-child { border-bottom: none; }
     .D-item-name { font-size: 12px; color: var(--txt2); }
     .D-item-price { font-size: 12px; font-weight: 500; color: var(--txt); }
@@ -447,7 +412,7 @@ export default function DashboardPage() {
     .D-btn-del:hover { color: var(--txt2); border-color: var(--border2); }
 
     .LD { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
-    .LD-ring { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg) } }
 
     @media (max-width: 1100px) {
@@ -554,7 +519,6 @@ export default function DashboardPage() {
               <button className="D-nav-link" onClick={() => router.push('/dashboard/config')}>Config</button>
               <button className="D-nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
             </div>
-            <button className="D-theme-btn" onClick={toggleTheme} title="Cambiar tema">{dark ? '☀️' : '🌙'}</button>
             <button className="D-burger" onClick={() => setDrawerOpen(true)}>☰</button>
           </div>
         </nav>
