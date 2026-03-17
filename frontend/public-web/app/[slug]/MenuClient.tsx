@@ -1011,7 +1011,7 @@ function RestauranteInner() {
                   <p className="F-map-address">📍 {address}</p>
                   <iframe
                     className="F-map-frame"
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
+                    src={address.startsWith('http') ? address + '&output=embed' : `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                     title="Ubicación del local"

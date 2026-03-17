@@ -50,6 +50,7 @@ const fmtDate = (iso: string) => {
 export default function PedidoClient({ slug, orderId }: { slug: string; orderId: string }) {
   const [order, setOrder] = useState<Order | null>(null)
   const [bankInfo, setBankInfo] = useState<string | null>(null)
+  const [address, setAddress] = useState<string | null>(null)
   const [tenantName, setTenantName] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#FF4D00')
   const [loading, setLoading] = useState(true)
@@ -75,6 +76,7 @@ export default function PedidoClient({ slug, orderId }: { slug: string; orderId:
         setTenantName(d.tenant_name || slug)
         setPrimaryColor(d.primary_color || '#FF4D00')
         setBankInfo(d.bank_info || null)
+        setAddress(d.address || null)
         document.documentElement.style.setProperty('--ac', d.primary_color || '#FF4D00')
         document.documentElement.style.setProperty('--ac-dim', (d.primary_color || '#FF4D00') + '22')
       })
@@ -203,6 +205,13 @@ export default function PedidoClient({ slug, orderId }: { slug: string; orderId:
     .RC-copy-btn { flex-shrink: 0; padding: 8px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--txt2); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif; }
     .RC-copy-btn:hover { color: var(--txt); border-color: var(--border2); }
     .RC-copy-btn.ok { color: #4ade80; border-color: #22c55e55; }
+
+    /* ── Map ── */
+    .P-map { background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+    .P-map-head { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+    .P-map-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--txt3); }
+    .P-map-address { font-size: 13px; color: var(--txt2); padding: 10px 16px 0; display: flex; align-items: center; gap: 6px; }
+    .P-map-frame { width: 100%; height: 200px; border: none; display: block; margin-top: 10px; }
 
     /* ── Loading / Error ── */
     .LD { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); gap: 14px; }
@@ -352,6 +361,21 @@ export default function PedidoClient({ slug, orderId }: { slug: string; orderId:
                   {copied ? '✓ Copiado' : 'Copiar'}
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Map for takeaway */}
+          {!order.table_number && address && (
+            <div className="P-map">
+              <div className="P-map-head"><span className="P-map-label">Dónde retirás</span></div>
+              <p className="P-map-address">📍 {address.startsWith('http') ? 'Ver ubicación en el mapa' : address}</p>
+              <iframe
+                className="P-map-frame"
+                src={address.startsWith('http') ? address + '&output=embed' : `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Ubicación del local"
+              />
             </div>
           )}
         </div>

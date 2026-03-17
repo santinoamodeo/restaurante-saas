@@ -379,14 +379,14 @@ export default function ConfigPage() {
             </div>
 
             <div className="C-group">
-              <label className="C-label">Dirección del local</label>
+              <label className="C-label">Link de Google Maps del local</label>
               <input
                 className="C-input"
-                placeholder="Av. San Martín 1234, Mendoza"
+                placeholder="https://maps.app.goo.gl/..."
                 value={address}
                 onChange={e => setAddress(e.target.value)}
               />
-              <p className="C-input-hint">Se muestra en el mapa cuando el cliente elige "Para llevar"</p>
+              <p className="C-input-hint">Abrí Google Maps, buscá tu local, clickeá Compartir y copiá el link</p>
             </div>
           </div>
 
