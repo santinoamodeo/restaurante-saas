@@ -21,6 +21,7 @@ class OrderStatus(str, enum.Enum):
 class PaymentMethod(str, enum.Enum):
     cash = "cash"
     online = "online"
+    transfer = "transfer"
 
 class Order(Base):
     __tablename__ = "orders"

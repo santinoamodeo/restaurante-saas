@@ -6,7 +6,7 @@ import os
 async def migrate():
     engine = create_async_engine(os.environ['DATABASE_URL'])
     async with engine.begin() as conn:
-        await conn.execute(text('ALTER TABLE tenants ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500)'))
+        await conn.execute(text("ALTER TYPE paymentmethod ADD VALUE IF NOT EXISTS 'transfer'"))
         print('OK')
 
 asyncio.run(migrate())
