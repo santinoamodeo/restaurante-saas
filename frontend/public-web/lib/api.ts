@@ -42,7 +42,7 @@ export interface CreateOrderPayload {
   customer_phone?: string
   table_number?: string
   notes?: string
-  payment_method: 'cash' | 'online'
+  payment_method: 'cash' | 'online' | 'transfer'
   items: OrderItem[]
 }
 

@@ -29,6 +29,19 @@ function RestauranteInner() {
   const [showForm, setShowForm] = useState(false)
   const [orderSuccess, setOrderSuccess] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+
+  interface ReceiptData {
+    orderId: string
+    orderNumber: string
+    date: string
+    items: { name: string; quantity: number; unitPrice: number; subtotal: number }[]
+    total: number
+    customerName: string
+    paymentMethod: 'cash' | 'transfer'
+    orderType: OrderType
+    tableNumber: string
+  }
+  const [receipt, setReceipt] = useState<ReceiptData | null>(null)
   const [activeCategory, setActiveCategory] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer'>('cash')
   const [form, setForm] = useState({ customer_name: '', customer_phone: '', table_number: '', notes: '' })
@@ -117,12 +130,56 @@ function RestauranteInner() {
     }
     setFormErrors({})
     setSubmitting(true)
+    const cartSnapshot = [...cart]
+    const total = cartSnapshot.reduce((s, c) => s + parseFloat(c.item.price) * c.quantity, 0)
     try {
-      await createOrder(slug, {
+      const res = await createOrder(slug, {
         ...form,
         payment_method: paymentMethod,
-        items: cart.map(c => ({ menu_item_id: c.item.id, quantity: c.quantity, notes: c.notes || undefined })),
+        items: cartSnapshot.map(c => ({ menu_item_id: c.item.id, quantity: c.quantity, notes: c.notes || undefined })),
       } as CreateOrderPayload)
+
+      const orderId: string = res?.id || crypto.randomUUID()
+      const orderNumber = '#' + orderId.replace(/-/g, '').slice(0, 8).toUpperCase()
+      const date = new Date().toISOString()
+
+      const receiptData: ReceiptData = {
+        orderId,
+        orderNumber,
+        date,
+        items: cartSnapshot.map(c => ({
+          name: c.item.name,
+          quantity: c.quantity,
+          unitPrice: parseFloat(c.item.price),
+          subtotal: parseFloat(c.item.price) * c.quantity,
+        })),
+        total,
+        customerName: form.customer_name,
+        paymentMethod,
+        orderType,
+        tableNumber: form.table_number,
+      }
+
+      // Save to localStorage history
+      try {
+        const stored = JSON.parse(localStorage.getItem('eatly_orders') || '[]')
+        stored.unshift({
+          id: orderId,
+          order_number: orderNumber,
+          date,
+          items: receiptData.items,
+          total,
+          restaurant: tenantName,
+          status: 'pending',
+          payment_method: paymentMethod,
+          customer_name: form.customer_name,
+          order_type: orderType,
+          table_number: form.table_number,
+        })
+        localStorage.setItem('eatly_orders', JSON.stringify(stored.slice(0, 50)))
+      } catch { /* storage unavailable */ }
+
+      setReceipt(receiptData)
       setOrderSuccess(true)
       setCart([])
       setShowForm(false)
@@ -150,6 +207,7 @@ function RestauranteInner() {
       --bg2: #161616;
       --bg3: #1E1E1E;
       --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.14);
       --txt: #FFFFFF;
       --txt2: rgba(255,255,255,0.45);
       --txt3: rgba(255,255,255,0.2);
@@ -351,6 +409,47 @@ function RestauranteInner() {
     }
     .PM-copy-btn:hover { color: var(--txt); border-color: rgba(255,255,255,0.18); }
 
+    /* ── Receipt ── */
+    .RC { min-height: 100vh; background: var(--bg); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; padding-bottom: 40px; }
+    .RC-head { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 28px 20px 24px; text-align: center; }
+    .RC-check { font-size: 52px; margin-bottom: 12px; animation: rcpop 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
+    @keyframes rcpop { from { transform: scale(0.5); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+    .RC-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--txt); letter-spacing: -0.5px; margin-bottom: 4px; }
+    .RC-num { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--ac); letter-spacing: 0.05em; }
+    .RC-date { font-size: 12px; color: var(--txt3); margin-top: 4px; }
+
+    .RC-body { max-width: 480px; margin: 0 auto; padding: 20px 16px 0; display: flex; flex-direction: column; gap: 12px; }
+
+    .RC-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+    .RC-card-head { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+    .RC-card-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--txt3); font-weight: 500; }
+
+    .RC-item { display: flex; align-items: baseline; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+    .RC-item:last-child { border-bottom: none; }
+    .RC-item-qty { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--ac); min-width: 22px; }
+    .RC-item-name { flex: 1; font-size: 14px; color: rgba(255,255,255,0.8); }
+    .RC-item-price { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; color: var(--txt); }
+
+    .RC-total-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; }
+    .RC-total-label { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--txt2); }
+    .RC-total-amount { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--ac); letter-spacing: -0.5px; }
+
+    .RC-info-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--border); }
+    .RC-info-row:last-child { border-bottom: none; }
+    .RC-info-key { font-size: 12px; color: var(--txt3); }
+    .RC-info-val { font-size: 14px; font-weight: 500; color: var(--txt); text-align: right; }
+
+    .RC-transfer { padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+    .RC-transfer-inner { flex: 1; }
+    .RC-transfer-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--txt3); margin-bottom: 3px; }
+    .RC-transfer-val { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt); word-break: break-all; }
+
+    .RC-actions { max-width: 480px; margin: 0 auto; padding: 16px 16px 0; display: flex; flex-direction: column; gap: 10px; }
+    .RC-btn-wa { width: 100%; background: #25D366; color: #fff; border: none; border-radius: 14px; padding: 16px; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.18s; }
+    .RC-btn-wa:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .RC-btn-back { width: 100%; background: transparent; color: var(--txt2); border: 1px solid var(--border); border-radius: 14px; padding: 15px; font-size: 14px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; }
+    .RC-btn-back:hover { color: var(--txt); border-color: var(--border2); }
+
     .LD { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); gap: 14px; }
     .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
     @keyframes spin { to{transform:rotate(360deg)} }
@@ -383,19 +482,124 @@ function RestauranteInner() {
     </>
   )
 
-  if (orderSuccess) return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: css }} />
-      <div className="SC">
-        <div className="SC-icon">🎉</div>
-        <h2 className="SC-t">¡Pedido enviado!</h2>
-        <p className="SC-s">En breve el restaurante<br />confirma tu pedido.</p>
-        <button className="BS-btn" style={{ maxWidth: 280 }} onClick={() => { setOrderSuccess(false); setOrderType(null); setShowMesaInput(false); setMesaInput(''); setPaymentMethod('cash') }}>
-          Nuevo pedido
-        </button>
-      </div>
-    </>
-  )
+  if (orderSuccess && receipt) {
+    const fmtDate = (iso: string) => {
+      const d = new Date(iso)
+      return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+    }
+
+    const orderTypeLabel = receipt.orderType === 'dine_in'
+      ? (receipt.tableNumber ? `🪑 Mesa ${receipt.tableNumber}` : '🪑 Comer aquí')
+      : '🛍️ Para llevar'
+
+    const payLabel = receipt.paymentMethod === 'cash' ? '💵 Efectivo' : '🏦 Transferencia'
+
+    const waText = encodeURIComponent(
+      `🧾 *Comprobante de pedido*\n` +
+      `Restaurante: ${tenantName}\n` +
+      `Pedido: ${receipt.orderNumber}\n` +
+      `Fecha: ${fmtDate(receipt.date)}\n\n` +
+      `*Items:*\n` +
+      receipt.items.map(i => `• ${i.quantity}x ${i.name} — $${fmt(i.subtotal)}`).join('\n') +
+      `\n\n*Total: $${fmt(receipt.total)}*\n` +
+      `Pago: ${payLabel}\n` +
+      `${receipt.orderType === 'dine_in' && receipt.tableNumber ? `Mesa: ${receipt.tableNumber}\n` : ''}` +
+      `Cliente: ${receipt.customerName}`
+    )
+
+    const handleBack = () => {
+      setOrderSuccess(false)
+      setReceipt(null)
+      setOrderType(null)
+      setShowMesaInput(false)
+      setMesaInput('')
+      setPaymentMethod('cash')
+      setForm({ customer_name: '', customer_phone: '', table_number: '', notes: '' })
+    }
+
+    return (
+      <>
+        <style dangerouslySetInnerHTML={{ __html: css }} />
+        <div className="RC">
+          <div className="RC-head">
+            <div className="RC-check">🎉</div>
+            <h2 className="RC-title">¡Pedido confirmado!</h2>
+            <p className="RC-num">{receipt.orderNumber}</p>
+            <p className="RC-date">{fmtDate(receipt.date)}</p>
+          </div>
+
+          <div className="RC-body">
+            {/* Items */}
+            <div className="RC-card">
+              <div className="RC-card-head">
+                <span className="RC-card-label">Tu pedido</span>
+              </div>
+              {receipt.items.map((item, i) => (
+                <div key={i} className="RC-item">
+                  <span className="RC-item-qty">{item.quantity}×</span>
+                  <span className="RC-item-name">{item.name}</span>
+                  <span className="RC-item-price">${fmt(item.subtotal)}</span>
+                </div>
+              ))}
+              <div className="RC-total-row">
+                <span className="RC-total-label">Total</span>
+                <span className="RC-total-amount">${fmt(receipt.total)}</span>
+              </div>
+            </div>
+
+            {/* Info */}
+            <div className="RC-card">
+              <div className="RC-info-row">
+                <span className="RC-info-key">Cliente</span>
+                <span className="RC-info-val">{receipt.customerName}</span>
+              </div>
+              <div className="RC-info-row">
+                <span className="RC-info-key">Tipo de pedido</span>
+                <span className="RC-info-val">{orderTypeLabel}</span>
+              </div>
+              <div className="RC-info-row">
+                <span className="RC-info-key">Método de pago</span>
+                <span className="RC-info-val">{payLabel}</span>
+              </div>
+            </div>
+
+            {/* Transfer info */}
+            {receipt.paymentMethod === 'transfer' && bankInfo && (
+              <div className="RC-card">
+                <div className="RC-card-head">
+                  <span className="RC-card-label">Datos para la transferencia</span>
+                </div>
+                <div className="RC-transfer">
+                  <div className="RC-transfer-inner">
+                    <p className="RC-transfer-label">CBU / Alias</p>
+                    <p className="RC-transfer-val">{bankInfo}</p>
+                  </div>
+                  <button className="PM-copy-btn" onClick={copyBankInfo}>Copiar</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="RC-actions">
+            <a
+              href={`https://wa.me/?text=${waText}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'none' }}
+            >
+              <button className="RC-btn-wa">
+                <span>💬</span> Enviar por WhatsApp
+              </button>
+            </a>
+            <button className="RC-btn-back" onClick={handleBack}>
+              ← Volver al menú
+            </button>
+          </div>
+        </div>
+      </>
+    )
+  }
 
   // Welcome screen — only if orderType not yet chosen
   if (orderType === null) return (
