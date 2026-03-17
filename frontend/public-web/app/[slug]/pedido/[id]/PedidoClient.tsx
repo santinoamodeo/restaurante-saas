@@ -207,11 +207,12 @@ export default function PedidoClient({ slug, orderId }: { slug: string; orderId:
     .RC-copy-btn.ok { color: #4ade80; border-color: #22c55e55; }
 
     /* ── Map ── */
-    .P-map { background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
-    .P-map-head { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
-    .P-map-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--txt3); }
-    .P-map-address { font-size: 13px; color: var(--txt2); padding: 10px 16px 0; display: flex; align-items: center; gap: 6px; }
-    .P-map-frame { width: 100%; height: 200px; border: none; display: block; margin-top: 10px; }
+    .P-map-btn { display: flex; align-items: center; gap: 12px; width: 100%; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; cursor: pointer; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
+    .P-map-btn:hover { background: #222; border-color: rgba(255,255,255,0.15); }
+    .P-map-btn-icon { font-size: 22px; flex-shrink: 0; }
+    .P-map-btn-texts { display: flex; flex-direction: column; gap: 2px; }
+    .P-map-btn-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; color: #fff; }
+    .P-map-btn-addr { font-size: 12px; color: rgba(255,255,255,0.4); }
 
     /* ── Loading / Error ── */
     .LD { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); gap: 14px; }
@@ -366,17 +367,18 @@ export default function PedidoClient({ slug, orderId }: { slug: string; orderId:
 
           {/* Map for takeaway */}
           {!order.table_number && address && (
-            <div className="P-map">
-              <div className="P-map-head"><span className="P-map-label">Dónde retirás</span></div>
-              <p className="P-map-address">📍 {address.startsWith('http') ? 'Ver ubicación en el mapa' : address}</p>
-              <iframe
-                className="P-map-frame"
-                src={address.startsWith('http') ? address + '&output=embed' : `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Ubicación del local"
-              />
-            </div>
+            <a
+              className="P-map-btn"
+              href={address.startsWith('http') ? address : `https://maps.google.com/maps?q=${encodeURIComponent(address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="P-map-btn-icon">📍</span>
+              <span className="P-map-btn-texts">
+                <span className="P-map-btn-title">Ver en Google Maps</span>
+                <span className="P-map-btn-addr">{address.startsWith('http') ? 'Abrir ubicación del local' : address}</span>
+              </span>
+            </a>
           )}
         </div>
       </div>

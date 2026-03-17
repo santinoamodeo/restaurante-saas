@@ -559,8 +559,12 @@ function RestauranteInner() {
 
     .F-map-section { margin-bottom: 20px; }
     .F-map-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--txt3); display: block; margin-bottom: 8px; }
-    .F-map-address { font-size: 13px; color: var(--txt2); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-    .F-map-frame { width: 100%; height: 200px; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; display: block; }
+    .F-map-btn { display: flex; align-items: center; gap: 12px; width: 100%; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 16px; cursor: pointer; text-align: left; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
+    .F-map-btn:hover { background: #222; border-color: rgba(255,255,255,0.15); }
+    .F-map-btn-icon { font-size: 22px; flex-shrink: 0; }
+    .F-map-btn-texts { display: flex; flex-direction: column; gap: 2px; }
+    .F-map-btn-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; color: #fff; }
+    .F-map-btn-addr { font-size: 12px; color: rgba(255,255,255,0.4); }
 
     /* ── Receipt ── */
     .RC { min-height: 100vh; background: var(--bg); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; padding-bottom: 40px; }
@@ -1008,14 +1012,18 @@ function RestauranteInner() {
               {orderType === 'takeaway' && address && (
                 <div className="F-map-section">
                   <span className="F-map-label">Dónde retirás</span>
-                  <p className="F-map-address">📍 {address}</p>
-                  <iframe
-                    className="F-map-frame"
-                    src={address.startsWith('http') ? address + '&output=embed' : `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Ubicación del local"
-                  />
+                  <a
+                    className="F-map-btn"
+                    href={address.startsWith('http') ? address : `https://maps.google.com/maps?q=${encodeURIComponent(address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span className="F-map-btn-icon">📍</span>
+                    <span className="F-map-btn-texts">
+                      <span className="F-map-btn-title">Ver en Google Maps</span>
+                      <span className="F-map-btn-addr">{address.startsWith('http') ? 'Abrir ubicación del local' : address}</span>
+                    </span>
+                  </a>
                 </div>
               )}
 
