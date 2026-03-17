@@ -38,6 +38,7 @@ async def get_public_menu(tenant_slug: str, db: AsyncSession = Depends(get_db)):
         primary_color=tenant.primary_color,
         logo_url=tenant.logo_url,
         bank_info=tenant.bank_info,
+        address=tenant.address,
         categories=categories,
     )
 

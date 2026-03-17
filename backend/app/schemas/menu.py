@@ -64,4 +64,5 @@ class PublicMenuResponse(BaseModel):
     primary_color: str
     logo_url: str | None = None
     bank_info: str | None = None
+    address: str | None = None
     categories: list[CategoryWithItems]

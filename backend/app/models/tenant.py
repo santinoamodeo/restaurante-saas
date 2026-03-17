@@ -24,4 +24,5 @@ class Tenant(Base):
     primary_color: Mapped[str] = mapped_column(String(7), nullable=False, default="#E85D04")
     logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     bank_info: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    address: Mapped[str | None] = mapped_column(String(400), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
