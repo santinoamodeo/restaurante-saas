@@ -6,6 +6,9 @@ from sqlalchemy import String, ForeignKey, Numeric, Text, DateTime, Enum as SAEn
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 import enum
+import pytz
+
+BA_TZ = pytz.timezone('America/Argentina/Buenos_Aires')
 
 if TYPE_CHECKING:
     from app.models.menu import MenuItem
@@ -35,7 +38,7 @@ class Order(Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     total: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0)
     payment_method: Mapped[PaymentMethod] = mapped_column(SAEnum(PaymentMethod), default=PaymentMethod.cash)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(BA_TZ))
 
     items: Mapped[list["OrderItem"]] = relationship("OrderItem", back_populates="order")
 

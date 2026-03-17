@@ -457,7 +457,7 @@ export default function DashboardPage() {
           <div className="D-order-right">
             <p className="D-order-total">${fmt(order.total)}</p>
             <p className="D-order-time">
-              {new Date(order.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+              {new Date(order.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
             </p>
             <span className={`D-chevron${isOpen ? ' open' : ''}`}>▼</span>
           </div>
