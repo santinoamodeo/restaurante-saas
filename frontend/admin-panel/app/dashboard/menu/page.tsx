@@ -182,10 +182,10 @@ export default function MenuPage() {
     .M-theme-btn:hover { border-color: var(--border2); }
     .M-burger { display: none; background: none; border: none; color: var(--txt); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; }
     .M-drawer-ov { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
-    .M-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: #141414; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: mdrw .2s ease; }
+    .M-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: var(--bg2); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: mdrw .2s ease; }
     @keyframes mdrw { from { transform: translateX(100%) } to { transform: translateX(0) } }
     .M-drawer-link { padding: 12px 14px; border-radius: 10px; font-size: 14px; color: var(--txt2); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; text-align: left; width: 100%; transition: all 0.15s; }
-    .M-drawer-link:hover { color: var(--txt); background: rgba(255,255,255,0.06); }
+    .M-drawer-link:hover { color: var(--txt); background: var(--bg3); }
     .M-drawer-exit { color: #f87171; }
     .M-drawer-exit:hover { background: rgba(239,68,68,0.08) !important; }
     @media (max-width: 640px) {
@@ -207,9 +207,9 @@ export default function MenuPage() {
     .M-cat-input::placeholder { color: var(--txt3); }
     .M-cat-ok { padding: 7px 10px; background: var(--ac); border: none; border-radius: 8px; color: #fff; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
 
-    .M-cat-item { padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.15s; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .M-cat-item { padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.15s; border-bottom: 1px solid var(--border); }
     .M-cat-item:last-child { border-bottom: none; }
-    .M-cat-item:hover { background: rgba(255,255,255,0.03); }
+    .M-cat-item:hover { background: var(--bg3); }
     .M-cat-item.on { background: var(--ac-dim); }
     .M-cat-name { font-size: 14px; color: var(--txt2); transition: color 0.15s; }
     .M-cat-item.on .M-cat-name { color: var(--ac); font-weight: 500; }
@@ -239,13 +239,13 @@ export default function MenuPage() {
     .M-form-cancel { padding: 11px 14px; border-radius: 10px; font-size: 13px; color: var(--txt3); cursor: pointer; border: 1px solid var(--border); background: transparent; font-family: 'Inter', sans-serif; transition: all 0.15s; }
     .M-form-cancel:hover { color: var(--txt2); border-color: var(--border2); }
 
-    .M-item { padding: 14px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; }
+    .M-item { padding: 14px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); transition: background 0.15s; }
     .M-item:last-child { border-bottom: none; }
-    .M-item:hover { background: rgba(255,255,255,0.02); }
+    .M-item:hover { background: var(--bg3); }
 
     .M-item-img { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; flex-shrink: 0; cursor: pointer; transition: opacity 0.15s; }
     .M-item-img:hover { opacity: 0.8; }
-    .M-item-ph { width: 52px; height: 52px; border-radius: 10px; background: var(--bg3); border: 1px dashed rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--txt3); font-size: 18px; cursor: pointer; transition: all 0.15s; }
+    .M-item-ph { width: 52px; height: 52px; border-radius: 10px; background: var(--bg3); border: 1px dashed var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--txt3); font-size: 18px; cursor: pointer; transition: all 0.15s; }
     .M-item-ph:hover { border-color: var(--ac); color: var(--ac); }
 
     .M-item-info { flex: 1; min-width: 0; }
@@ -253,20 +253,20 @@ export default function MenuPage() {
     .M-item-desc { font-size: 12px; color: var(--txt3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
     .M-item-price { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--ac); }
 
-    .M-unavailable { font-size: 10px; background: rgba(255,255,255,0.06); color: var(--txt3); padding: 2px 7px; border-radius: 100px; display: inline-block; margin-left: 6px; vertical-align: middle; }
+    .M-unavailable { font-size: 10px; background: var(--bg3); color: var(--txt3); padding: 2px 7px; border-radius: 100px; display: inline-block; margin-left: 6px; vertical-align: middle; }
 
     .M-item-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
     .M-ia-btn { width: 30px; height: 30px; border-radius: 8px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: background 0.15s; color: var(--txt2); }
-    .M-ia-btn:hover { background: rgba(255,255,255,0.08); }
+    .M-ia-btn:hover { background: var(--bg3); }
     .M-ia-toggle { font-size: 11px; padding: 4px 9px; border-radius: 6px; border: none; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
     .M-ia-toggle.on { background: rgba(34,197,94,0.1); color: #22c55e; }
-    .M-ia-toggle.off { background: rgba(255,255,255,0.05); color: var(--txt3); }
+    .M-ia-toggle.off { background: var(--bg3); color: var(--txt3); }
 
     .M-empty { padding: 48px 20px; text-align: center; color: var(--txt3); font-size: 14px; }
     .M-empty-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.3; }
 
     .LD { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
-    .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    .LD-ring { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg) } }
 
     @media (max-width: 640px) {
@@ -325,7 +325,7 @@ export default function MenuPage() {
               </div>
             ))}
             {categories.length === 0 && (
-              <div style={{ padding: '24px 16px', textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.2)' }}>Sin categorías</div>
+              <div style={{ padding: '24px 16px', textAlign: 'center', fontSize: 13, color: 'var(--txt3)' }}>Sin categorías</div>
             )}
           </div>
 

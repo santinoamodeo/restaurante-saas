@@ -141,10 +141,10 @@ export default function QRPage() {
     .Q-theme-btn:hover { border-color: var(--border2); }
     .Q-burger { display: none; background: none; border: none; color: var(--txt); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; }
     .Q-drawer-ov { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
-    .Q-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: #141414; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: qdrw .2s ease; }
+    .Q-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: var(--bg2); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: qdrw .2s ease; }
     @keyframes qdrw { from { transform: translateX(100%) } to { transform: translateX(0) } }
     .Q-drawer-link { padding: 12px 14px; border-radius: 10px; font-size: 14px; color: var(--txt2); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; text-align: left; width: 100%; transition: all 0.15s; }
-    .Q-drawer-link:hover { color: var(--txt); background: rgba(255,255,255,0.06); }
+    .Q-drawer-link:hover { color: var(--txt); background: var(--bg3); }
     .Q-drawer-exit { color: #f87171; }
     .Q-drawer-exit:hover { background: rgba(239,68,68,0.08) !important; }
     @media (max-width: 640px) {
@@ -229,7 +229,7 @@ export default function QRPage() {
     .Q-warn { font-size: 12px; color: #f87171; margin-top: 8px; }
 
     .LD { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
-    .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    .LD-ring { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg) } }
   `
 

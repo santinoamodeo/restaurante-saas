@@ -366,13 +366,13 @@ function RestauranteInner() {
     .W-cards { display: flex; gap: 12px; width: 100%; max-width: 420px; }
 
     .W-card {
-      flex: 1; background: #141414; border: 1px solid var(--border);
+      flex: 1; background: var(--bg2); border: 1px solid var(--border);
       border-radius: 22px; padding: 28px 16px 24px;
       display: flex; flex-direction: column; align-items: center; gap: 10px;
       cursor: pointer; transition: all 0.2s; text-align: center;
       -webkit-tap-highlight-color: transparent;
     }
-    .W-card:hover { border-color: var(--ac); background: #191919; transform: translateY(-2px); }
+    .W-card:hover { border-color: var(--ac); background: var(--bg3); transform: translateY(-2px); }
     .W-card.active { border-color: var(--ac); background: var(--ac-dim); }
 
     .W-card-icon { font-size: 40px; line-height: 1; }
@@ -385,7 +385,7 @@ function RestauranteInner() {
     }
     .W-mesa-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--txt3); display: block; margin-bottom: 8px; }
     .W-mesa-input {
-      width: 100%; background: #141414; border: 1px solid var(--border);
+      width: 100%; background: var(--bg3); border: 1px solid var(--border);
       border-radius: 14px; padding: 15px 18px;
       font-size: 18px; font-family: 'Syne', sans-serif; font-weight: 700;
       color: var(--txt); outline: none; transition: border-color 0.18s;
@@ -486,7 +486,7 @@ function RestauranteInner() {
     }
     .H-orders-btn:hover { color: var(--txt); border-color: var(--border2); }
     .H-otype {
-      background: rgba(255,255,255,0.06);
+      background: var(--bg3);
       color: var(--txt2); font-size: 10px; font-weight: 500;
       padding: 5px 10px; border-radius: 100px;
       border: 1px solid var(--border); white-space: nowrap;
@@ -498,7 +498,7 @@ function RestauranteInner() {
       padding: 6px 15px; border-radius: 100px; border: 1px solid var(--border);
       background: transparent; color: var(--txt2); cursor: pointer; transition: all 0.18s; white-space: nowrap;
     }
-    .C-btn:hover { border-color: rgba(255,255,255,0.18); color: var(--txt); }
+    .C-btn:hover { border-color: var(--border2); color: var(--txt); }
     .C-btn.on { background: var(--ac); border-color: var(--ac); color: #fff; font-weight: 500; }
 
     .I-list { max-width: 600px; margin: 0 auto; padding: 12px 12px 140px; display: flex; flex-direction: column; gap: 8px; }
@@ -507,7 +507,7 @@ function RestauranteInner() {
       background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; padding: 14px;
       display: flex; align-items: center; gap: 14px; transition: border-color 0.2s, background 0.2s;
     }
-    .I-card:hover { border-color: rgba(255,255,255,0.12); background: #181818; }
+    .I-card:hover { border-color: var(--border2); background: var(--bg3); }
     .I-img { width: 76px; height: 76px; border-radius: 13px; object-fit: cover; flex-shrink: 0; }
     .I-ph { width: 76px; height: 76px; border-radius: 13px; background: var(--bg3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--txt3); font-size: 22px; }
     .I-info { flex: 1; min-width: 0; }
@@ -519,12 +519,12 @@ function RestauranteInner() {
     .Btn-add:hover { filter: brightness(1.15); transform: scale(1.07); }
     .Btn-add:active { transform: scale(0.93); }
     .Btn-sub { width: 32px; height: 32px; border-radius: 50%; background: var(--bg3); border: none; color: var(--txt); font-size: 18px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
-    .Btn-sub:hover { background: #2a2a2a; }
+    .Btn-sub:hover { background: var(--border2); }
     .I-qty { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; min-width: 18px; text-align: center; }
 
     .CF { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 90; }
-    .CF-empty { display: flex; align-items: center; gap: 8px; background: rgba(22,22,22,0.88); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); color: var(--txt3); padding: 12px 24px; border-radius: 100px; font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
-    .CF-empty:hover { border-color: rgba(255,255,255,0.18); color: var(--txt2); }
+    .CF-empty { display: flex; align-items: center; gap: 8px; background: var(--bg2); backdrop-filter: blur(12px); border: 1px solid var(--border); color: var(--txt3); padding: 12px 24px; border-radius: 100px; font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+    .CF-empty:hover { border-color: var(--border2); color: var(--txt2); }
     .CF-full { display: flex; align-items: center; gap: 10px; background: var(--ac); color: #fff; padding: 15px 26px; border-radius: 100px; font-size: 15px; font-weight: 600; font-family: 'Syne', sans-serif; border: none; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 28px rgba(0,0,0,0.55); transition: all 0.2s; }
     .CF-full:hover { filter: brightness(1.1); transform: translateY(-2px); }
     .CF-pill { background: rgba(0,0,0,0.22); border-radius: 100px; padding: 2px 9px; font-size: 13px; font-weight: 700; }
@@ -532,12 +532,12 @@ function RestauranteInner() {
     .OV { position: fixed; inset: 0; z-index: 110; background: rgba(0,0,0,0.72); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); animation: fadein 0.2s; }
     @keyframes fadein { from{opacity:0} to{opacity:1} }
 
-    .BS { position: fixed; bottom: 0; left: 0; right: 0; z-index: 120; background: #141414; border: 1px solid rgba(255,255,255,0.08); border-bottom: none; border-radius: 24px 24px 0 0; padding: 0 16px 28px; max-height: 88vh; overflow-y: auto; animation: slideup 0.3s cubic-bezier(0.32,0.72,0,1); max-width: 600px; margin: 0 auto; }
+    .BS { position: fixed; bottom: 0; left: 0; right: 0; z-index: 120; background: var(--bg2); border: 1px solid var(--border); border-bottom: none; border-radius: 24px 24px 0 0; padding: 0 16px 28px; max-height: 88vh; overflow-y: auto; animation: slideup 0.3s cubic-bezier(0.32,0.72,0,1); max-width: 600px; margin: 0 auto; }
     @keyframes slideup { from{transform:translateY(100%)} to{transform:translateY(0)} }
-    .BS-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 12px auto 20px; }
+    .BS-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 12px auto 20px; }
     .BS-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--txt); margin-bottom: 18px; letter-spacing: -0.5px; }
     .BS-line { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); }
-    .BS-lname { flex:1; font-size: 14px; color: rgba(255,255,255,0.75); }
+    .BS-lname { flex:1; font-size: 14px; color: var(--txt2); }
     .BS-lprice { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; min-width: 72px; text-align: right; }
     .BS-total { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
     .BS-tlabel { font-size: 12px; color: var(--txt2); letter-spacing: 0.1em; text-transform: uppercase; }
@@ -548,7 +548,7 @@ function RestauranteInner() {
 
     .F-group { margin-bottom: 10px; }
     .F-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--txt3); display: block; margin-bottom: 6px; }
-    .F-input { width: 100%; background: #1C1C1C; border: 1px solid rgba(255,255,255,0.08); border-radius: 11px; padding: 13px 14px; font-size: 15px; color: var(--txt); font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.18s; }
+    .F-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 11px; padding: 13px 14px; font-size: 15px; color: var(--txt); font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.18s; }
     .F-input::placeholder { color: var(--txt3); }
     .F-input:focus { border-color: var(--ac); }
     .F-ta { resize: none; height: 74px; }
@@ -559,19 +559,19 @@ function RestauranteInner() {
 
     .PM-cards { display: flex; gap: 10px; margin-top: 2px; }
     .PM-card {
-      flex: 1; background: #1C1C1C; border: 1px solid var(--border);
+      flex: 1; background: var(--bg3); border: 1px solid var(--border);
       border-radius: 14px; padding: 14px 12px;
       display: flex; flex-direction: column; align-items: center; gap: 6px;
       cursor: pointer; transition: all 0.18s; text-align: center;
       -webkit-tap-highlight-color: transparent;
     }
-    .PM-card:hover { border-color: rgba(255,255,255,0.15); }
+    .PM-card:hover { border-color: var(--border2); }
     .PM-card.on { border-color: var(--ac); background: var(--ac-dim); }
     .PM-card-icon { font-size: 26px; line-height: 1; }
     .PM-card-label { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--txt); }
 
     .PM-transfer-info {
-      margin-top: 10px; background: #1C1C1C; border: 1px solid var(--border);
+      margin-top: 10px; background: var(--bg3); border: 1px solid var(--border);
       border-radius: 12px; padding: 13px 14px;
       display: flex; align-items: center; gap: 10px;
     }
@@ -582,16 +582,16 @@ function RestauranteInner() {
       border-radius: 8px; color: var(--txt2); font-size: 12px; font-weight: 500;
       cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif;
     }
-    .PM-copy-btn:hover { color: var(--txt); border-color: rgba(255,255,255,0.18); }
+    .PM-copy-btn:hover { color: var(--txt); border-color: var(--border2); }
 
     .F-map-section { margin-bottom: 20px; }
     .F-map-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--txt3); display: block; margin-bottom: 8px; }
-    .F-map-btn { display: flex; align-items: center; gap: 12px; width: 100%; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 16px; cursor: pointer; text-align: left; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
-    .F-map-btn:hover { background: #222; border-color: rgba(255,255,255,0.15); }
+    .F-map-btn { display: flex; align-items: center; gap: 12px; width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; cursor: pointer; text-align: left; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
+    .F-map-btn:hover { background: var(--bg2); border-color: var(--border2); }
     .F-map-btn-icon { font-size: 22px; flex-shrink: 0; }
     .F-map-btn-texts { display: flex; flex-direction: column; gap: 2px; }
-    .F-map-btn-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; color: #fff; }
-    .F-map-btn-addr { font-size: 12px; color: rgba(255,255,255,0.4); }
+    .F-map-btn-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; color: var(--txt); }
+    .F-map-btn-addr { font-size: 12px; color: var(--txt3); }
 
     /* ── Receipt ── */
     .RC { min-height: 100vh; background: var(--bg); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; padding-bottom: 40px; }
@@ -637,7 +637,7 @@ function RestauranteInner() {
     .RC-btn-track:hover { background: var(--bg3); }
 
     .LD { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); gap: 14px; }
-    .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    .LD-ring { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
     @keyframes spin { to{transform:rotate(360deg)} }
     .LD-txt { font-size: 12px; color: var(--txt3); letter-spacing: 0.06em; }
 

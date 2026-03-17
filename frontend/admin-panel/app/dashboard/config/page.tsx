@@ -153,10 +153,10 @@ export default function ConfigPage() {
     .C-theme-btn:hover { border-color: var(--border2); }
     .C-burger { display: none; background: none; border: none; color: var(--txt); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; }
     .C-drawer-ov { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
-    .C-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: #141414; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: cdrw .2s ease; }
+    .C-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: var(--bg2); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: cdrw .2s ease; }
     @keyframes cdrw { from { transform: translateX(100%) } to { transform: translateX(0) } }
     .C-drawer-link { padding: 12px 14px; border-radius: 10px; font-size: 14px; color: var(--txt2); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; text-align: left; width: 100%; transition: all 0.15s; }
-    .C-drawer-link:hover { color: var(--txt); background: rgba(255,255,255,0.06); }
+    .C-drawer-link:hover { color: var(--txt); background: var(--bg3); }
     .C-drawer-exit { color: #f87171; }
     .C-drawer-exit:hover { background: rgba(239,68,68,0.08) !important; }
     @media (max-width: 640px) {
@@ -196,7 +196,7 @@ export default function ConfigPage() {
     .C-info-step:last-child { margin-bottom: 0; }
     .C-info-num { width: 20px; height: 20px; background: var(--ac-dim); border: 1px solid rgba(232,93,4,0.2); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--ac); font-weight: 600; flex-shrink: 0; margin-top: 1px; }
     .C-info-text { font-size: 13px; color: var(--txt3); line-height: 1.5; }
-    .C-info-text code { background: rgba(255,255,255,0.07); padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--txt2); }
+    .C-info-text code { background: var(--bg3); padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--txt2); }
 
     .C-logo-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
     .C-logo-preview {
@@ -234,7 +234,7 @@ export default function ConfigPage() {
     .C-color-label { font-size: 12px; color: var(--txt3); }
 
     .LD { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
-    .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    .LD-ring { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg) } }
   `
 

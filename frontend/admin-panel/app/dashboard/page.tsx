@@ -246,10 +246,10 @@ export default function DashboardPage() {
     .D-nav-links { display: flex; align-items: center; gap: 4px; }
     .D-burger { display: none; background: none; border: none; color: var(--txt); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; }
     .D-drawer-ov { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
-    .D-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: #141414; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: drw .2s ease; }
+    .D-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: var(--bg2); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: drw .2s ease; }
     @keyframes drw { from { transform: translateX(100%) } to { transform: translateX(0) } }
     .D-drawer-link { padding: 12px 14px; border-radius: 10px; font-size: 14px; color: var(--txt2); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; text-align: left; width: 100%; transition: all 0.15s; }
-    .D-drawer-link:hover { color: var(--txt); background: rgba(255,255,255,0.06); }
+    .D-drawer-link:hover { color: var(--txt); background: var(--bg3); }
     .D-drawer-exit { color: #f87171; }
     .D-drawer-exit:hover { background: rgba(239,68,68,0.08) !important; }
     @media (max-width: 640px) {
@@ -337,7 +337,7 @@ export default function DashboardPage() {
     .D-col-badge.orange { background: rgba(232,93,4,0.15);  color: #E85D04; }
     .D-col-badge.blue   { background: rgba(59,130,246,0.15); color: #60a5fa; }
     .D-col-badge.green  { background: rgba(34,197,94,0.15);  color: #22c55e; }
-    .D-col-badge.dim    { background: rgba(255,255,255,0.06); color: var(--txt3); }
+    .D-col-badge.dim    { background: var(--bg3); color: var(--txt3); }
 
     .D-col-toggle {
       background: none; border: none; cursor: pointer;
@@ -409,7 +409,7 @@ export default function DashboardPage() {
     }
 
     .D-items-list { margin-bottom: 14px; }
-    .D-item-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .D-item-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); }
     .D-item-row:last-child { border-bottom: none; }
     .D-item-name { font-size: 12px; color: var(--txt2); }
     .D-item-price { font-size: 12px; font-weight: 500; color: var(--txt); }
@@ -447,7 +447,7 @@ export default function DashboardPage() {
     .D-btn-del:hover { color: var(--txt2); border-color: var(--border2); }
 
     .LD { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
-    .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    .LD-ring { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg) } }
 
     @media (max-width: 1100px) {
