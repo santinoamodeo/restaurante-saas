@@ -11,6 +11,7 @@ export default function ConfigPage() {
   const router = useRouter()
   const [whatsapp, setWhatsapp] = useState('')
   const [apiKey, setApiKey] = useState('')
+  const [bankInfo, setBankInfo] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#E85D04')
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -34,6 +35,7 @@ export default function ConfigPage() {
       const res = await api.get('/api/v1/admin/config')
       setWhatsapp(res.data.whatsapp_number || '')
       setApiKey(res.data.callmebot_api_key || '')
+      setBankInfo(res.data.bank_info || '')
       setPrimaryColor(res.data.primary_color || '#E85D04')
       const url = res.data.logo_url || null
       setLogoUrl(url)
@@ -78,6 +80,7 @@ export default function ConfigPage() {
         whatsapp_number: whatsapp || null,
         callmebot_api_key: apiKey || null,
         primary_color: primaryColor,
+        bank_info: bankInfo || null,
       })
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
@@ -339,6 +342,27 @@ export default function ConfigPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="C-section">
+            <div className="C-section-head">
+              <div className="C-section-icon">🏦</div>
+              <div>
+                <p className="C-section-title">Pagos</p>
+                <p className="C-section-sub">Datos para transferencia bancaria</p>
+              </div>
+            </div>
+
+            <div className="C-group">
+              <label className="C-label">CBU / Alias</label>
+              <input
+                className="C-input"
+                placeholder="Ej: mi.restaurante o 0000003100..."
+                value={bankInfo}
+                onChange={e => setBankInfo(e.target.value)}
+              />
+              <p className="C-input-hint">Se mostrará al cliente cuando elija pagar por transferencia</p>
             </div>
           </div>
 

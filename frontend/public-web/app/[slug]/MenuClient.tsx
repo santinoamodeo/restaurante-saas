@@ -20,6 +20,7 @@ function RestauranteInner() {
   const [tenantName, setTenantName] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#FF4D00')
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [bankInfo, setBankInfo] = useState<string | null>(null)
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,6 +30,7 @@ function RestauranteInner() {
   const [orderSuccess, setOrderSuccess] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [activeCategory, setActiveCategory] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer'>('cash')
   const [form, setForm] = useState({ customer_name: '', customer_phone: '', table_number: '', notes: '' })
   const [formErrors, setFormErrors] = useState<{ customer_name?: string; customer_phone?: string; table_number?: string }>({})
 
@@ -55,6 +57,7 @@ function RestauranteInner() {
         setTenantName(name)
         setPrimaryColor(color)
         setLogoUrl(data.logo_url || null)
+        setBankInfo(data.bank_info || null)
         setCategories(cats)
         if (cats.length > 0) setActiveCategory(cats[0].id)
         document.documentElement.style.setProperty('--ac', color)
@@ -117,7 +120,7 @@ function RestauranteInner() {
     try {
       await createOrder(slug, {
         ...form,
-        payment_method: 'cash',
+        payment_method: paymentMethod,
         items: cart.map(c => ({ menu_item_id: c.item.id, quantity: c.quantity, notes: c.notes || undefined })),
       } as CreateOrderPayload)
       setOrderSuccess(true)
@@ -129,6 +132,8 @@ function RestauranteInner() {
       setSubmitting(false)
     }
   }
+
+  const copyBankInfo = () => { if (bankInfo) navigator.clipboard.writeText(bankInfo) }
 
   const fmt = (n: number | string) => parseFloat(String(n)).toLocaleString('es-AR')
   const activeItems = categories.find(c => c.id === activeCategory)?.items?.filter(i => i.is_available) || []
@@ -319,6 +324,33 @@ function RestauranteInner() {
     .F-error { font-size: 11px; color: #E53E3E; margin-top: 5px; display: block; }
     .F-req { color: var(--ac); margin-left: 2px; }
 
+    .PM-cards { display: flex; gap: 10px; margin-top: 2px; }
+    .PM-card {
+      flex: 1; background: #1C1C1C; border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 12px;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      cursor: pointer; transition: all 0.18s; text-align: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .PM-card:hover { border-color: rgba(255,255,255,0.15); }
+    .PM-card.on { border-color: var(--ac); background: var(--ac-dim); }
+    .PM-card-icon { font-size: 26px; line-height: 1; }
+    .PM-card-label { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--txt); }
+
+    .PM-transfer-info {
+      margin-top: 10px; background: #1C1C1C; border: 1px solid var(--border);
+      border-radius: 12px; padding: 13px 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .PM-transfer-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3); margin-bottom: 3px; }
+    .PM-transfer-value { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt); word-break: break-all; }
+    .PM-copy-btn {
+      flex-shrink: 0; padding: 8px 12px; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--txt2); font-size: 12px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif;
+    }
+    .PM-copy-btn:hover { color: var(--txt); border-color: rgba(255,255,255,0.18); }
+
     .LD { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); gap: 14px; }
     .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
     @keyframes spin { to{transform:rotate(360deg)} }
@@ -358,7 +390,7 @@ function RestauranteInner() {
         <div className="SC-icon">🎉</div>
         <h2 className="SC-t">¡Pedido enviado!</h2>
         <p className="SC-s">En breve el restaurante<br />confirma tu pedido.</p>
-        <button className="BS-btn" style={{ maxWidth: 280 }} onClick={() => { setOrderSuccess(false); setOrderType(null); setShowMesaInput(false); setMesaInput('') }}>
+        <button className="BS-btn" style={{ maxWidth: 280 }} onClick={() => { setOrderSuccess(false); setOrderType(null); setShowMesaInput(false); setMesaInput(''); setPaymentMethod('cash') }}>
           Nuevo pedido
         </button>
       </div>
@@ -570,6 +602,30 @@ function RestauranteInner() {
                 <label className="F-label">Notas</label>
                 <textarea className="F-input F-ta" placeholder="Sin cebolla, alergias, etc." value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
               </div>
+
+              <div className="F-group" style={{ marginBottom: 20 }}>
+                <label className="F-label">Método de pago</label>
+                <div className="PM-cards">
+                  <div className={`PM-card${paymentMethod === 'cash' ? ' on' : ''}`} onClick={() => setPaymentMethod('cash')}>
+                    <span className="PM-card-icon">💵</span>
+                    <span className="PM-card-label">Efectivo</span>
+                  </div>
+                  <div className={`PM-card${paymentMethod === 'transfer' ? ' on' : ''}`} onClick={() => setPaymentMethod('transfer')}>
+                    <span className="PM-card-icon">🏦</span>
+                    <span className="PM-card-label">Transferencia</span>
+                  </div>
+                </div>
+                {paymentMethod === 'transfer' && bankInfo && (
+                  <div className="PM-transfer-info">
+                    <div style={{ flex: 1 }}>
+                      <p className="PM-transfer-label">CBU / Alias</p>
+                      <p className="PM-transfer-value">{bankInfo}</p>
+                    </div>
+                    <button className="PM-copy-btn" onClick={copyBankInfo}>Copiar</button>
+                  </div>
+                )}
+              </div>
+
               <button className="BS-btn" onClick={handleOrder} disabled={submitting}>
                 {submitting ? 'Enviando...' : `Pedir · $${fmt(cartTotal)}`}
               </button>

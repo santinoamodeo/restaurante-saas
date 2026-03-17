@@ -15,12 +15,14 @@ class TenantConfigResponse(BaseModel):
     callmebot_api_key: str | None
     primary_color: str
     logo_url: str | None
+    bank_info: str | None
 
 
 class TenantConfigUpdate(BaseModel):
     whatsapp_number: str | None = None
     callmebot_api_key: str | None = None
     primary_color: str | None = None
+    bank_info: str | None = None
 
 
 @router.get("", response_model=TenantConfigResponse)
@@ -31,6 +33,7 @@ async def get_config(tenant: Tenant = Depends(get_current_tenant)):
         callmebot_api_key=tenant.callmebot_api_key,
         primary_color=tenant.primary_color,
         logo_url=tenant.logo_url,
+        bank_info=tenant.bank_info,
     )
 
 
@@ -44,6 +47,7 @@ async def update_config(
     tenant.callmebot_api_key = data.callmebot_api_key or None
     if data.primary_color:
         tenant.primary_color = data.primary_color
+    tenant.bank_info = data.bank_info or None
     await db.commit()
     await db.refresh(tenant)
     return TenantConfigResponse(
@@ -52,6 +56,7 @@ async def update_config(
         callmebot_api_key=tenant.callmebot_api_key,
         primary_color=tenant.primary_color,
         logo_url=tenant.logo_url,
+        bank_info=tenant.bank_info,
     )
 
 
