@@ -165,6 +165,7 @@ export default function DashboardPage() {
   }
 
   const fmt = (n: string | number) => parseFloat(String(n)).toLocaleString('es-AR')
+  const mesaCount = (arr: Order[]) => arr.filter(o => o.table_number).length
   const todayTotal = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + parseFloat(o.total), 0)
 
   const nuevos   = orders.filter(o => o.status === 'pending')
@@ -304,6 +305,17 @@ export default function DashboardPage() {
     .D-col-badge.green  { background: rgba(34,197,94,0.15);  color: #22c55e; }
     .D-col-badge.dim    { background: rgba(255,255,255,0.06); color: var(--txt3); }
 
+    .D-col-head-main { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .D-col-sub { font-size: 10px; color: var(--txt3); font-family: 'Inter', sans-serif; }
+
+    .D-otype {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 600; font-family: 'Inter', sans-serif;
+      padding: 2px 7px; border-radius: 100px; margin-top: 3px;
+    }
+    .D-otype.mesa   { background: rgba(34,197,94,0.12);  color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+    .D-otype.llevar { background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
+
     .D-col-toggle {
       background: none; border: none; cursor: pointer;
       color: var(--txt3); font-size: 11px; padding: 0;
@@ -441,8 +453,11 @@ export default function DashboardPage() {
           <div className="D-order-meta">
             <p className="D-order-id">#{order.id.slice(0, 8).toUpperCase()}</p>
             <p className="D-order-customer">
-              {[order.customer_name, order.table_number && `Mesa ${order.table_number}`].filter(Boolean).join(' · ') || 'Sin datos'}
+              {order.customer_name || 'Sin datos'}
             </p>
+            <span className={`D-otype ${order.table_number ? 'mesa' : 'llevar'}`}>
+              {order.table_number ? `🪑 Mesa ${order.table_number}` : '🛍️ Para llevar'}
+            </span>
             {(order.status === 'confirmed' || order.status === 'preparing' || order.status === 'delivered' || order.status === 'cancelled') && (
               <span
                 className="D-status-badge"
@@ -548,7 +563,10 @@ export default function DashboardPage() {
             {/* Nuevos */}
             <div className="D-col">
               <div className="D-col-head">
-                <span className="D-col-title">Nuevos</span>
+                <div className="D-col-head-main">
+                  <span className="D-col-title">Nuevos</span>
+                  {nuevos.length > 0 && <span className="D-col-sub">{mesaCount(nuevos)} mesa · {nuevos.length - mesaCount(nuevos)} para llevar</span>}
+                </div>
                 {nuevos.length > 0 && <span className="D-col-badge red">{nuevos.length}</span>}
               </div>
               {nuevos.length === 0
@@ -560,7 +578,10 @@ export default function DashboardPage() {
             {/* En cocina */}
             <div className="D-col">
               <div className="D-col-head">
-                <span className="D-col-title">En cocina</span>
+                <div className="D-col-head-main">
+                  <span className="D-col-title">En cocina</span>
+                  {enCocina.length > 0 && <span className="D-col-sub">{mesaCount(enCocina)} mesa · {enCocina.length - mesaCount(enCocina)} para llevar</span>}
+                </div>
                 {enCocina.length > 0 && <span className="D-col-badge orange">{enCocina.length}</span>}
               </div>
               {enCocina.length === 0
@@ -572,7 +593,10 @@ export default function DashboardPage() {
             {/* Listos */}
             <div className="D-col">
               <div className="D-col-head">
-                <span className="D-col-title">Listos</span>
+                <div className="D-col-head-main">
+                  <span className="D-col-title">Listos</span>
+                  {listos.length > 0 && <span className="D-col-sub">{mesaCount(listos)} mesa · {listos.length - mesaCount(listos)} para llevar</span>}
+                </div>
                 {listos.length > 0 && <span className="D-col-badge green">{listos.length}</span>}
               </div>
               {listos.length === 0
