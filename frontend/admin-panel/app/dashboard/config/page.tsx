@@ -390,10 +390,6 @@ export default function ConfigPage() {
             </div>
           </div>
 
-          <p>TEST UBICACION</p>
-
-          {error && <div className="C-error">{error}</div>}
-
           <button
             className={`C-save${saved ? ' saved' : ''}`}
             onClick={handleSave}
