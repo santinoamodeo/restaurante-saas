@@ -48,6 +48,26 @@ function RestauranteInner() {
   const [form, setForm] = useState({ customer_name: '', customer_phone: '', table_number: '', notes: '' })
   const [formErrors, setFormErrors] = useState<{ customer_name?: string; customer_phone?: string; table_number?: string }>({})
 
+  // My orders
+  interface StoredOrder {
+    id: string
+    order_number: string
+    date: string
+    items: { name: string; quantity: number; subtotal: number }[]
+    total: number
+    restaurant: string
+    slug: string
+    status: string
+    payment_method: string
+    customer_name: string
+    order_type: string
+    table_number: string
+    tracking_url: string
+  }
+  const [myOrders, setMyOrders] = useState<StoredOrder[]>([])
+  const [showMyOrders, setShowMyOrders] = useState(false)
+  const [refreshingOrders, setRefreshingOrders] = useState(false)
+
   // Welcome screen state
   const [orderType, setOrderType] = useState<OrderType>(null)
   const [mesaInput, setMesaInput] = useState('')
@@ -61,6 +81,50 @@ function RestauranteInner() {
       setOrderType('dine_in')
     }
   }, [searchParams])
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+
+  const readLocalOrders = (): StoredOrder[] => {
+    try {
+      const all = JSON.parse(localStorage.getItem('eatly_orders') || '[]')
+      return all.filter((o: any) => o.slug === slug || o.tracking_url?.startsWith(`/${slug}/pedido/`))
+    } catch { return [] }
+  }
+
+  const refreshOrderStatuses = async (orders: StoredOrder[]) => {
+    setRefreshingOrders(true)
+    const updated = await Promise.all(orders.map(async o => {
+      if (o.status === 'delivered' || o.status === 'cancelled') return o
+      try {
+        const res = await fetch(`${API_URL}/api/v1/public/${slug}/orders/${o.id}`)
+        if (res.ok) return { ...o, status: (await res.json()).status }
+      } catch {}
+      return o
+    }))
+    setMyOrders(updated)
+    // Sync updated statuses back to localStorage
+    try {
+      const all = JSON.parse(localStorage.getItem('eatly_orders') || '[]')
+      const map = new Map(updated.map(o => [o.id, o]))
+      localStorage.setItem('eatly_orders', JSON.stringify(all.map((o: any) => map.get(o.id) || o)))
+    } catch {}
+    setRefreshingOrders(false)
+  }
+
+  const deleteFinished = () => {
+    const active = myOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled')
+    setMyOrders(active)
+    try {
+      const all = JSON.parse(localStorage.getItem('eatly_orders') || '[]')
+      const ids = new Set(active.map(o => o.id))
+      localStorage.setItem('eatly_orders', JSON.stringify(all.filter((o: any) => ids.has(o.id) || !o.tracking_url?.startsWith(`/${slug}/pedido/`))))
+    } catch {}
+  }
+
+  useEffect(() => {
+    const orders = readLocalOrders()
+    setMyOrders(orders)
+  }, [slug])
 
   useEffect(() => {
     getMenu(slug)
@@ -167,20 +231,23 @@ function RestauranteInner() {
       // Save to localStorage history
       try {
         const stored = JSON.parse(localStorage.getItem('eatly_orders') || '[]')
-        stored.unshift({
+        const newEntry = {
           id: orderId,
           order_number: orderNumber,
           date,
           items: receiptData.items,
           total,
           restaurant: tenantName,
+          slug,
           status: 'pending',
           payment_method: paymentMethod,
           customer_name: form.customer_name,
           order_type: orderType,
           table_number: form.table_number,
           tracking_url: trackingUrl,
-        })
+        }
+        stored.unshift(newEntry)
+        setMyOrders(prev => [newEntry as StoredOrder, ...prev])
         localStorage.setItem('eatly_orders', JSON.stringify(stored.slice(0, 50)))
       } catch { /* storage unavailable */ }
 
@@ -198,6 +265,24 @@ function RestauranteInner() {
   const copyBankInfo = () => { if (bankInfo) navigator.clipboard.writeText(bankInfo) }
 
   const fmt = (n: number | string) => parseFloat(String(n)).toLocaleString('es-AR')
+
+  const fmtDate = (iso: string) => {
+    const d = new Date(iso)
+    return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })
+      + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const STATUS_LABEL: Record<string, string> = {
+    pending: '⏳ Recibido',
+    confirmed: '✅ Confirmado',
+    preparing: '👨‍🍳 Preparando',
+    ready: '🔔 Listo para retirar',
+    delivered: '🎉 Entregado',
+    cancelled: '❌ Cancelado',
+  }
+
+  const activeOrder = myOrders.find(o => o.status !== 'delivered' && o.status !== 'cancelled') || null
+  const hasFinished = myOrders.some(o => o.status === 'delivered' || o.status === 'cancelled')
   const activeItems = categories.find(c => c.id === activeCategory)?.items?.filter(i => i.is_available) || []
 
   const css = `
@@ -286,6 +371,51 @@ function RestauranteInner() {
     }
     .W-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
 
+    /* ── Active order card (welcome) ── */
+    .W-active {
+      width: 100%; max-width: 420px; margin-bottom: 20px;
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 20px; padding: 16px 18px;
+      display: flex; align-items: center; gap: 14px;
+      animation: wfade 0.3s ease;
+    }
+    .W-active-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      background: var(--ac); box-shadow: 0 0 0 3px var(--ac-dim);
+      animation: dotpulse 2s ease-in-out infinite;
+    }
+    @keyframes dotpulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .W-active-txt { flex: 1; min-width: 0; }
+    .W-active-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3); margin-bottom: 2px; }
+    .W-active-num { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt); }
+    .W-active-status { font-size: 12px; color: var(--txt2); margin-top: 1px; }
+    .W-active-btn {
+      flex-shrink: 0; background: var(--ac); color: #fff; border: none;
+      border-radius: 100px; padding: 8px 16px; font-size: 13px; font-weight: 700;
+      font-family: 'Syne', sans-serif; cursor: pointer; transition: all 0.18s;
+      text-decoration: none; display: inline-block;
+    }
+    .W-active-btn:hover { filter: brightness(1.1); }
+
+    /* ── My orders sheet ── */
+    .MO-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--txt); margin-bottom: 4px; }
+    .MO-sub { font-size: 13px; color: var(--txt3); margin-bottom: 18px; }
+    .MO-item {
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 14px;
+      padding: 14px; margin-bottom: 10px;
+    }
+    .MO-item-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .MO-num { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--txt); }
+    .MO-date { font-size: 11px; color: var(--txt3); margin-top: 1px; }
+    .MO-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; gap: 8px; }
+    .MO-total { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--ac); }
+    .MO-link { font-size: 13px; font-weight: 600; color: var(--ac); text-decoration: none; font-family: 'Syne', sans-serif; padding: 7px 14px; border: 1px solid var(--ac); border-radius: 100px; transition: all 0.15s; }
+    .MO-link:hover { background: var(--ac-dim); }
+    .MO-empty { text-align: center; padding: 40px 20px; color: var(--txt3); font-size: 14px; }
+    .MO-clear { width: 100%; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; padding: 12px; font-size: 13px; color: #f87171; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 8px; transition: all 0.15s; }
+    .MO-clear:hover { background: rgba(239,68,68,0.1); }
+    .MO-refreshing { font-size: 11px; color: var(--txt3); text-align: center; padding: 6px 0 0; }
+
     .W-skip {
       margin-top: 24px; font-size: 13px; color: var(--txt3);
       background: none; border: none; cursor: pointer; font-family: 'Inter', sans-serif;
@@ -315,6 +445,13 @@ function RestauranteInner() {
       font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
       padding: 5px 11px; border-radius: 100px; border: 1px solid var(--ac);
     }
+    .H-orders-btn {
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 100px;
+      padding: 5px 11px; display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--txt2); cursor: pointer; transition: all 0.18s;
+      font-family: 'Inter', sans-serif;
+    }
+    .H-orders-btn:hover { color: var(--txt); border-color: var(--border2); }
     .H-otype {
       background: rgba(255,255,255,0.06);
       color: var(--txt2); font-size: 10px; font-weight: 500;
@@ -616,6 +753,18 @@ function RestauranteInner() {
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <div className="W">
+        {activeOrder && (
+          <div className="W-active">
+            <div className="W-active-dot" />
+            <div className="W-active-txt">
+              <p className="W-active-label">Pedido en curso</p>
+              <p className="W-active-num">{activeOrder.order_number}</p>
+              <p className="W-active-status">{STATUS_LABEL[activeOrder.status] || activeOrder.status}</p>
+            </div>
+            <a href={activeOrder.tracking_url} className="W-active-btn">Ver pedido</a>
+          </div>
+        )}
+
         <div className="W-brand">
           {logoUrl
             ? <img src={logoUrl} alt={tenantName} className="W-logo" />
@@ -687,6 +836,11 @@ function RestauranteInner() {
                 : <h1 className="H-name">{tenantName}</h1>
               }
               <div className="H-right">
+                {myOrders.length > 0 && (
+                  <button className="H-orders-btn" onClick={() => { setShowMyOrders(true); refreshOrderStatuses(myOrders) }}>
+                    🕐 {myOrders.length}
+                  </button>
+                )}
                 <span className="H-otype">{orderTypeBadge}</span>
                 <span className="H-badge">Menú</span>
               </div>
@@ -843,6 +997,45 @@ function RestauranteInner() {
               <button className="BS-btn" onClick={handleOrder} disabled={submitting}>
                 {submitting ? 'Enviando...' : `Pedir · $${fmt(cartTotal)}`}
               </button>
+            </div>
+          </>
+        )}
+        {showMyOrders && (
+          <>
+            <div className="OV" onClick={() => setShowMyOrders(false)} />
+            <div className="BS">
+              <div className="BS-handle" />
+              <h2 className="MO-title">Mis pedidos</h2>
+              <p className="MO-sub">{tenantName}</p>
+              {refreshingOrders && <p className="MO-refreshing">Actualizando estados…</p>}
+              {myOrders.length === 0 ? (
+                <div className="MO-empty">No tenés pedidos guardados</div>
+              ) : (
+                <>
+                  {myOrders.map(o => (
+                    <div key={o.id} className="MO-item">
+                      <div className="MO-item-top">
+                        <div>
+                          <p className="MO-num">{o.order_number}</p>
+                          <p className="MO-date">{fmtDate(o.date)}</p>
+                        </div>
+                        <span style={{ fontSize: 12, color: o.status === 'ready' ? '#4ade80' : o.status === 'cancelled' ? '#f87171' : 'rgba(255,255,255,0.45)' }}>
+                          {STATUS_LABEL[o.status] || o.status}
+                        </span>
+                      </div>
+                      <div className="MO-bottom">
+                        <span className="MO-total">${fmt(o.total)}</span>
+                        <a href={o.tracking_url} className="MO-link">Ver detalle →</a>
+                      </div>
+                    </div>
+                  ))}
+                  {hasFinished && (
+                    <button className="MO-clear" onClick={deleteFinished}>
+                      🗑 Limpiar pedidos terminados
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           </>
         )}
