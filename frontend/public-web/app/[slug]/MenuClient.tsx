@@ -40,6 +40,7 @@ function RestauranteInner() {
     paymentMethod: 'cash' | 'transfer'
     orderType: OrderType
     tableNumber: string
+    trackingUrl: string
   }
   const [receipt, setReceipt] = useState<ReceiptData | null>(null)
   const [activeCategory, setActiveCategory] = useState('')
@@ -143,6 +144,8 @@ function RestauranteInner() {
       const orderNumber = '#' + orderId.replace(/-/g, '').slice(0, 8).toUpperCase()
       const date = new Date().toISOString()
 
+      const trackingUrl = `/${slug}/pedido/${orderId}`
+
       const receiptData: ReceiptData = {
         orderId,
         orderNumber,
@@ -158,6 +161,7 @@ function RestauranteInner() {
         paymentMethod,
         orderType,
         tableNumber: form.table_number,
+        trackingUrl,
       }
 
       // Save to localStorage history
@@ -175,6 +179,7 @@ function RestauranteInner() {
           customer_name: form.customer_name,
           order_type: orderType,
           table_number: form.table_number,
+          tracking_url: trackingUrl,
         })
         localStorage.setItem('eatly_orders', JSON.stringify(stored.slice(0, 50)))
       } catch { /* storage unavailable */ }
@@ -449,6 +454,8 @@ function RestauranteInner() {
     .RC-btn-wa:hover { filter: brightness(1.1); transform: translateY(-1px); }
     .RC-btn-back { width: 100%; background: transparent; color: var(--txt2); border: 1px solid var(--border); border-radius: 14px; padding: 15px; font-size: 14px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; }
     .RC-btn-back:hover { color: var(--txt); border-color: var(--border2); }
+    .RC-btn-track { width: 100%; background: var(--bg2); color: var(--txt); border: 1px solid var(--border2); border-radius: 14px; padding: 15px; font-size: 14px; font-weight: 600; font-family: 'Syne', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.18s; text-decoration: none; }
+    .RC-btn-track:hover { background: var(--bg3); }
 
     .LD { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); gap: 14px; }
     .LD-ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
@@ -582,6 +589,9 @@ function RestauranteInner() {
           </div>
 
           <div className="RC-actions">
+            <a href={receipt.trackingUrl} className="RC-btn-track">
+              📍 Ver estado del pedido
+            </a>
             <a
               href={`https://wa.me/?text=${waText}`}
               target="_blank"

@@ -33,6 +33,27 @@ async def place_order(
     await send_order_notification(order, tenant)
     return order
 
+@router.get("/public/{tenant_slug}/orders/{order_id}", response_model=OrderResponse)
+async def get_public_order(
+    tenant_slug: str,
+    order_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Tenant).where(Tenant.slug == tenant_slug))
+    tenant = result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Restaurante no encontrado")
+
+    result = await db.execute(
+        select(Order)
+        .where(Order.id == order_id, Order.tenant_id == tenant.id)
+        .options(selectinload(Order.items).selectinload(OrderItem.menu_item))
+    )
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido no encontrado")
+    return order
+
 @router.get("/public/{tenant_slug}/qr/{table_number}")
 async def get_table_qr(tenant_slug: str, table_number: str):
     url = f"https://restaurante-saas-alpha.vercel.app/{tenant_slug}?mesa={table_number}"
