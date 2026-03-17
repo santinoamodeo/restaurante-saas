@@ -3,7 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1 import auth, setup, menu, orders, config, superadmin
 
-app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
+app = FastAPI(
+    title=settings.APP_NAME,
+    debug=settings.DEBUG,
+    docs_url="/docs" if settings.DEBUG else None,
+    redoc_url="/redoc" if settings.DEBUG else None,
+    openapi_url="/openapi.json" if settings.DEBUG else None,
+)
 
 app.add_middleware(
     CORSMiddleware,
