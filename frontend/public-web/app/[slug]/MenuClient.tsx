@@ -12,6 +12,23 @@ interface CartItem {
 
 type OrderType = 'dine_in' | 'takeaway' | null
 
+const LIGHT_THEME: Record<string, string> = {
+  '--bg': '#FAFAFA', '--bg2': '#FFFFFF', '--bg3': '#F0F0F0',
+  '--border': 'rgba(0,0,0,0.08)', '--border2': 'rgba(0,0,0,0.15)',
+  '--txt': '#1a1a1a', '--txt2': 'rgba(0,0,0,0.5)', '--txt3': 'rgba(0,0,0,0.3)',
+}
+const DARK_THEME: Record<string, string> = {
+  '--bg': '#0C0C0C', '--bg2': '#161616', '--bg3': '#1E1E1E',
+  '--border': 'rgba(255,255,255,0.07)', '--border2': 'rgba(255,255,255,0.14)',
+  '--txt': '#FFFFFF', '--txt2': 'rgba(255,255,255,0.45)', '--txt3': 'rgba(255,255,255,0.2)',
+}
+function applyTheme(isDark: boolean) {
+  const vars = isDark ? DARK_THEME : LIGHT_THEME
+  const root = document.documentElement
+  Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v))
+  localStorage.setItem('eatly_theme', isDark ? 'dark' : 'light')
+}
+
 function RestauranteInner() {
   const params = useParams()
   const slug = params.slug as string
@@ -68,12 +85,22 @@ function RestauranteInner() {
   const [myOrders, setMyOrders] = useState<StoredOrder[]>([])
   const [showMyOrders, setShowMyOrders] = useState(false)
   const [refreshingOrders, setRefreshingOrders] = useState(false)
+  const [dark, setDark] = useState(true)
 
   // Welcome screen state
   const [orderType, setOrderType] = useState<OrderType>(null)
   const [mesaInput, setMesaInput] = useState('')
   const [showMesaInput, setShowMesaInput] = useState(false)
   const mesaRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('eatly_theme')
+    const isDark = saved !== 'light'
+    setDark(isDark)
+    applyTheme(isDark)
+  }, [])
+
+  function toggleTheme() { const next = !dark; setDark(next); applyTheme(next) }
 
   useEffect(() => {
     const mesa = searchParams.get('mesa')
@@ -317,7 +344,7 @@ function RestauranteInner() {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 32px 20px 48px; font-family: 'Inter', sans-serif;
       -webkit-font-smoothing: antialiased;
-      animation: wfade 0.3s ease;
+      animation: wfade 0.3s ease; position: relative;
     }
     @keyframes wfade { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
 
@@ -622,6 +649,14 @@ function RestauranteInner() {
 
     .empty { text-align: center; padding: 72px 20px; color: var(--txt3); font-size: 14px; }
     .empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.3; }
+
+    .R-theme-btn {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: var(--bg3); border: 1px solid var(--border);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 15px; transition: all 0.15s; flex-shrink: 0;
+    }
+    .R-theme-btn:hover { border-color: var(--border2); }
   `
 
   if (loading) return (
@@ -768,6 +803,7 @@ function RestauranteInner() {
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <div className="W">
+        <button className="R-theme-btn" onClick={toggleTheme} title="Cambiar tema" style={{ position: 'absolute', top: 16, right: 16 }}>{dark ? '☀️' : '🌙'}</button>
         {activeOrder && (
           <div className="W-active">
             <div className="W-active-dot" />
@@ -856,6 +892,7 @@ function RestauranteInner() {
                     🕐 {myOrders.length}
                   </button>
                 )}
+                <button className="R-theme-btn" onClick={toggleTheme} title="Cambiar tema">{dark ? '☀️' : '🌙'}</button>
                 <span className="H-otype">{orderTypeBadge}</span>
                 <span className="H-badge">Menú</span>
               </div>

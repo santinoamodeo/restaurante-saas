@@ -7,6 +7,23 @@ import { setAuthToken } from '@/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
+const LIGHT_THEME: Record<string, string> = {
+  '--bg': '#FAFAFA', '--bg2': '#FFFFFF', '--bg3': '#F0F0F0',
+  '--border': 'rgba(0,0,0,0.08)', '--border2': 'rgba(0,0,0,0.15)',
+  '--txt': '#1a1a1a', '--txt2': 'rgba(0,0,0,0.5)', '--txt3': 'rgba(0,0,0,0.3)',
+}
+const DARK_THEME: Record<string, string> = {
+  '--bg': '#0C0C0C', '--bg2': '#141414', '--bg3': '#1C1C1C',
+  '--border': 'rgba(255,255,255,0.07)', '--border2': 'rgba(255,255,255,0.12)',
+  '--txt': '#FFFFFF', '--txt2': 'rgba(255,255,255,0.45)', '--txt3': 'rgba(255,255,255,0.2)',
+}
+function applyTheme(isDark: boolean) {
+  const vars = isDark ? DARK_THEME : LIGHT_THEME
+  const root = document.documentElement
+  Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v))
+  localStorage.setItem('eatly_theme', isDark ? 'dark' : 'light')
+}
+
 export default function ConfigPage() {
   const router = useRouter()
   const [whatsapp, setWhatsapp] = useState('')
@@ -22,6 +39,16 @@ export default function ConfigPage() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  const [dark, setDark] = useState(true)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('eatly_theme')
+    const isDark = saved !== 'light'
+    setDark(isDark)
+    applyTheme(isDark)
+  }, [])
+
+  function toggleTheme() { const next = !dark; setDark(next); applyTheme(next) }
 
   useEffect(() => {
     const token = getToken()
@@ -117,6 +144,13 @@ export default function ConfigPage() {
     .C-nav-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt); }
     .C-nav-exit { padding: 6px 12px; border-radius: 8px; font-size: 13px; color: var(--txt3); cursor: pointer; transition: all 0.15s; border: none; background: transparent; font-family: 'Inter', sans-serif; }
     .C-nav-exit:hover { color: #f87171; background: rgba(239,68,68,0.08); }
+    .C-theme-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--bg3); border: 1px solid var(--border);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 15px; transition: all 0.15s; flex-shrink: 0;
+    }
+    .C-theme-btn:hover { border-color: var(--border2); }
     .C-burger { display: none; background: none; border: none; color: var(--txt); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; }
     .C-drawer-ov { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
     .C-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 201; width: 220px; background: #141414; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; padding: 20px 12px; gap: 4px; animation: cdrw .2s ease; }
@@ -223,6 +257,7 @@ export default function ConfigPage() {
               <span className="C-nav-title">Configuración</span>
             </div>
             <button className="C-nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
+            <button className="C-theme-btn" onClick={toggleTheme} title="Cambiar tema">{dark ? '☀️' : '🌙'}</button>
             <button className="C-burger" onClick={() => setDrawerOpen(true)}>☰</button>
           </div>
         </nav>
