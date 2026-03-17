@@ -21,6 +21,7 @@ function RestauranteInner() {
   const [primaryColor, setPrimaryColor] = useState('#FF4D00')
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [bankInfo, setBankInfo] = useState<string | null>(null)
+  const [address, setAddress] = useState<string | null>(null)
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -140,6 +141,7 @@ function RestauranteInner() {
         setPrimaryColor(color)
         setLogoUrl(data.logo_url || null)
         setBankInfo(data.bank_info || null)
+        setAddress(data.address || null)
         setCategories(cats)
         if (cats.length > 0) setActiveCategory(cats[0].id)
         document.documentElement.style.setProperty('--ac', color)
@@ -554,6 +556,11 @@ function RestauranteInner() {
       cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif;
     }
     .PM-copy-btn:hover { color: var(--txt); border-color: rgba(255,255,255,0.18); }
+
+    .F-map-section { margin-bottom: 20px; }
+    .F-map-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--txt3); display: block; margin-bottom: 8px; }
+    .F-map-address { font-size: 13px; color: var(--txt2); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .F-map-frame { width: 100%; height: 200px; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; display: block; }
 
     /* ── Receipt ── */
     .RC { min-height: 100vh; background: var(--bg); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; padding-bottom: 40px; }
@@ -997,6 +1004,20 @@ function RestauranteInner() {
                   </div>
                 )}
               </div>
+
+              {orderType === 'takeaway' && address && (
+                <div className="F-map-section">
+                  <span className="F-map-label">Dónde retirás</span>
+                  <p className="F-map-address">📍 {address}</p>
+                  <iframe
+                    className="F-map-frame"
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Ubicación del local"
+                  />
+                </div>
+              )}
 
               <button className="BS-btn" onClick={handleOrder} disabled={submitting}>
                 {submitting ? 'Enviando...' : `Pedir · $${fmt(cartTotal)}`}

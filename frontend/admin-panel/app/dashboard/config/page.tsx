@@ -12,6 +12,7 @@ export default function ConfigPage() {
   const [whatsapp, setWhatsapp] = useState('')
   const [apiKey, setApiKey] = useState('')
   const [bankInfo, setBankInfo] = useState('')
+  const [address, setAddress] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#E85D04')
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -36,6 +37,7 @@ export default function ConfigPage() {
       setWhatsapp(res.data.whatsapp_number || '')
       setApiKey(res.data.callmebot_api_key || '')
       setBankInfo(res.data.bank_info || '')
+      setAddress(res.data.address || '')
       setPrimaryColor(res.data.primary_color || '#E85D04')
       const url = res.data.logo_url || null
       setLogoUrl(url)
@@ -81,6 +83,7 @@ export default function ConfigPage() {
         callmebot_api_key: apiKey || null,
         primary_color: primaryColor,
         bank_info: bankInfo || null,
+        address: address || null,
       })
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
@@ -365,6 +368,29 @@ export default function ConfigPage() {
               <p className="C-input-hint">Se mostrará al cliente cuando elija pagar por transferencia</p>
             </div>
           </div>
+
+          <div className="C-section">
+            <div className="C-section-head">
+              <div className="C-section-icon">📍</div>
+              <div>
+                <p className="C-section-title">Ubicación</p>
+                <p className="C-section-sub">Dirección del local para pedidos para llevar</p>
+              </div>
+            </div>
+
+            <div className="C-group">
+              <label className="C-label">Dirección del local</label>
+              <input
+                className="C-input"
+                placeholder="Av. San Martín 1234, Mendoza"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+              />
+              <p className="C-input-hint">Se muestra en el mapa cuando el cliente elige "Para llevar"</p>
+            </div>
+          </div>
+
+          <p>TEST UBICACION</p>
 
           {error && <div className="C-error">{error}</div>}
 
