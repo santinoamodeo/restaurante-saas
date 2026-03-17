@@ -13,7 +13,16 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://trayly.com.ar",
+        "https://www.trayly.com.ar",
+        "https://admin.trayly.com.ar",
+        "https://restaurante-saas-alpha.vercel.app",
+        "https://restaurante-saas-admin.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
