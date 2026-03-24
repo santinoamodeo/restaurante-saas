@@ -21,6 +21,16 @@ interface Tenant {
   plan_price: number
 }
 
+interface ServiceStatus {
+  name: string
+  url: string
+  displayUrl: string
+  status: 'ok' | 'error' | 'checking' | 'idle'
+  latency: number | null
+  checkedAt: Date | null
+  error: string | null
+}
+
 interface DrawerEdit {
   plan: string
   billing_day: string
@@ -40,6 +50,13 @@ export default function DashboardPage() {
   const [formError, setFormError] = useState('')
   const [formSuccess, setFormSuccess] = useState('')
 
+  const [services, setServices] = useState<ServiceStatus[]>([
+    { name: 'Backend', url: 'https://restaurante-saas-production-136b.up.railway.app/health', displayUrl: 'railway.app', status: 'idle', latency: null, checkedAt: null, error: null },
+    { name: 'Web pública', url: 'https://trayly.com.ar/mi-restaurante-2', displayUrl: 'trayly.com.ar', status: 'idle', latency: null, checkedAt: null, error: null },
+    { name: 'Admin panel', url: 'https://admin.trayly.com.ar', displayUrl: 'admin.trayly.com.ar', status: 'idle', latency: null, checkedAt: null, error: null },
+  ])
+  const [checking, setChecking] = useState(false)
+
   const [drawerTenant, setDrawerTenant] = useState<Tenant | null>(null)
   const [drawerEdit, setDrawerEdit] = useState<DrawerEdit>({ plan: '', billing_day: '', plan_price: '', internal_notes: '', owner_name: '', owner_phone: '' })
   const [drawerSaving, setDrawerSaving] = useState(false)
@@ -50,6 +67,40 @@ export default function DashboardPage() {
     if (!token) { router.push('/'); return }
     setAuthToken(token)
     loadTenants()
+  }, [])
+
+  async function checkService(svc: ServiceStatus): Promise<ServiceStatus> {
+    const start = Date.now()
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 10000)
+    try {
+      const fetchOpts: RequestInit = { signal: controller.signal }
+      // Use no-cors for external sites that don't allow our origin
+      if (!svc.url.includes('railway.app')) fetchOpts.mode = 'no-cors'
+      const res = await fetch(svc.url, fetchOpts)
+      clearTimeout(timer)
+      const latency = Date.now() - start
+      // no-cors gives opaque response (status 0) — treat as ok if no throw
+      const ok = res.type === 'opaque' || res.ok
+      return { ...svc, status: ok ? 'ok' : 'error', latency, checkedAt: new Date(), error: ok ? null : `HTTP ${res.status}` }
+    } catch (e: any) {
+      clearTimeout(timer)
+      return { ...svc, status: 'error', latency: null, checkedAt: new Date(), error: e?.name === 'AbortError' ? 'Timeout (10s)' : e?.message ?? 'Error' }
+    }
+  }
+
+  async function checkAllServices() {
+    setChecking(true)
+    setServices(prev => prev.map(s => ({ ...s, status: 'checking' as const })))
+    const results = await Promise.all(services.map(checkService))
+    setServices(results)
+    setChecking(false)
+  }
+
+  useEffect(() => {
+    checkAllServices()
+    const interval = setInterval(checkAllServices, 5 * 60 * 1000)
+    return () => clearInterval(interval)
   }, [])
 
   async function loadTenants() {
@@ -249,8 +300,39 @@ export default function DashboardPage() {
     .drw-save:disabled { opacity: 0.5; cursor: not-allowed; }
     .drw-saved { background: rgba(34,197,94,0.12); color: #22c55e; border: 1px solid rgba(34,197,94,0.2); width: 100%; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 600; font-family: 'Syne', sans-serif; text-align: center; }
 
+    /* ── Monitor ── */
+    .monitor-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+    .monitor-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--txt2); text-transform: uppercase; letter-spacing: 0.06em; }
+    .monitor-meta { font-size: 11px; color: var(--txt3); }
+    .btn-check { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; font-family: 'Syne', sans-serif; border: 1px solid var(--border); background: transparent; color: var(--txt2); cursor: pointer; transition: all 0.15s; }
+    .btn-check:hover { color: var(--txt); border-color: var(--border2); }
+    .btn-check:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .svc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px; }
+    .svc-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; transition: border-color 0.2s; }
+    .svc-card.ok    { border-color: rgba(34,197,94,0.2); }
+    .svc-card.error { border-color: rgba(239,68,68,0.25); }
+    .svc-card.checking { border-color: rgba(99,102,241,0.2); }
+    .svc-top { display: flex; align-items: center; justify-content: space-between; }
+    .svc-name { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--txt); }
+    .svc-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .svc-dot.ok      { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+    .svc-dot.error   { background: #f87171; box-shadow: 0 0 6px rgba(239,68,68,0.5); }
+    .svc-dot.checking { background: #818cf8; animation: pulse 1s ease-in-out infinite; }
+    .svc-dot.idle    { background: var(--txt3); }
+    @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.3 } }
+    .svc-url { font-size: 11px; color: var(--txt3); }
+    .svc-status-txt { font-size: 12px; font-weight: 500; }
+    .svc-status-txt.ok      { color: #22c55e; }
+    .svc-status-txt.error   { color: #f87171; }
+    .svc-status-txt.checking { color: #818cf8; }
+    .svc-status-txt.idle    { color: var(--txt3); }
+    .svc-latency { font-size: 11px; color: var(--txt3); }
+    .svc-time { font-size: 10px; color: var(--txt3); }
+
     @media (max-width: 900px) {
       .stats { grid-template-columns: repeat(2, 1fr); }
+      .svc-grid { grid-template-columns: 1fr; }
       .table-head { display: none; }
       .row { grid-template-columns: 1fr auto; grid-template-rows: auto auto; }
       .drw { width: 100vw; }
@@ -300,6 +382,44 @@ export default function DashboardPage() {
               <p className="stat-label">MRR</p>
               <p className="stat-val emerald">${mrr.toLocaleString('es-AR')}</p>
             </div>
+          </div>
+
+          {/* Monitoreo */}
+          <div className="monitor-bar">
+            <span className="monitor-title">Estado de servicios</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {services[0].checkedAt && (
+                <span className="monitor-meta">
+                  Última verificación: {services[0].checkedAt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
+              )}
+              <button className="btn-check" onClick={checkAllServices} disabled={checking}>
+                {checking ? '↻ Verificando...' : '↻ Verificar ahora'}
+              </button>
+            </div>
+          </div>
+          <div className="svc-grid">
+            {services.map(svc => (
+              <div key={svc.name} className={`svc-card ${svc.status}`}>
+                <div className="svc-top">
+                  <span className="svc-name">{svc.name}</span>
+                  <span className={`svc-dot ${svc.status}`} />
+                </div>
+                <span className="svc-url">{svc.displayUrl}</span>
+                <span className={`svc-status-txt ${svc.status}`}>
+                  {svc.status === 'ok' && 'Operativo'}
+                  {svc.status === 'error' && (svc.error ?? 'Error')}
+                  {svc.status === 'checking' && 'Verificando...'}
+                  {svc.status === 'idle' && 'Sin verificar'}
+                </span>
+                {svc.latency != null && <span className="svc-latency">{svc.latency} ms</span>}
+                {svc.checkedAt && (
+                  <span className="svc-time">
+                    {svc.checkedAt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
 
           <div className="toolbar">

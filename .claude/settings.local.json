@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(python -c \":*)",
+      "Bash(python3 -c \":*)",
+      "Bash(xxd \"C:\\\\Users\\\\samodeo\\\\Desktop\\\\restaurante-saas\\\\backend\\\\requirements.txt\")",
+      "Bash(powershell -Command \"Add-Content -Path 'C:\\\\Users\\\\samodeo\\\\Desktop\\\\restaurante-saas\\\\backend\\\\requirements.txt' -Value 'resend' -Encoding Unicode\")"
     ]
   }
 }

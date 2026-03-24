@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text
+from datetime import datetime
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.security import hash_password, verify_password, create_access_token
@@ -201,3 +202,29 @@ async def toggle_tenant(
     await db.commit()
 
     return {"id": str(tenant.id), "is_active": tenant.is_active}
+
+
+MONITOR_KEY = "monitor-trayly-2026"
+
+
+@router.post("/health-check")
+async def health_check(
+    x_monitor_key: str = Header(None, alias="X-Monitor-Key"),
+    db: AsyncSession = Depends(get_db),
+):
+    if x_monitor_key != MONITOR_KEY:
+        raise HTTPException(status_code=403, detail="Invalid monitor key")
+
+    db_ok = True
+    db_error = None
+    try:
+        await db.execute(text("SELECT 1"))
+    except Exception as e:
+        db_ok = False
+        db_error = str(e)
+
+    return {
+        "backend": {"status": "ok"},
+        "database": {"status": "ok" if db_ok else "error", "error": db_error},
+        "checked_at": datetime.utcnow().isoformat(),
+    }
