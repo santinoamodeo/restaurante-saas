@@ -19,6 +19,7 @@ app.add_middleware(
         "https://admin.trayly.com.ar",
         "https://restaurante-saas-alpha.vercel.app",
         "https://restaurante-saas-admin.vercel.app",
+        "https://restaurante-saas-super.vercel.app",
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:3002",
