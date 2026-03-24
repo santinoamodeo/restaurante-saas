@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getToken, removeToken } from '@/lib/auth'
-import { setAuthToken, getTenants, createTenant, toggleTenant } from '@/lib/api'
+import { setAuthToken, getTenants, createTenant, toggleTenant, updateTenant } from '@/lib/api'
 
 interface Tenant {
   id: string
@@ -13,6 +13,21 @@ interface Tenant {
   is_active: boolean
   created_at: string
   total_orders: number
+  owner_email: string | null
+  owner_name: string | null
+  owner_phone: string | null
+  billing_day: number | null
+  internal_notes: string | null
+  plan_price: number
+}
+
+interface DrawerEdit {
+  plan: string
+  billing_day: string
+  plan_price: string
+  internal_notes: string
+  owner_name: string
+  owner_phone: string
 }
 
 export default function DashboardPage() {
@@ -24,6 +39,11 @@ export default function DashboardPage() {
   const [form, setForm] = useState({ tenant_name: '', tenant_slug: '', admin_email: '', admin_password: '' })
   const [formError, setFormError] = useState('')
   const [formSuccess, setFormSuccess] = useState('')
+
+  const [drawerTenant, setDrawerTenant] = useState<Tenant | null>(null)
+  const [drawerEdit, setDrawerEdit] = useState<DrawerEdit>({ plan: '', billing_day: '', plan_price: '', internal_notes: '', owner_name: '', owner_phone: '' })
+  const [drawerSaving, setDrawerSaving] = useState(false)
+  const [drawerSaved, setDrawerSaved] = useState(false)
 
   useEffect(() => {
     const token = getToken()
@@ -64,9 +84,43 @@ export default function DashboardPage() {
     await loadTenants()
   }
 
+  function openDrawer(t: Tenant) {
+    setDrawerTenant(t)
+    setDrawerEdit({
+      plan: t.plan,
+      billing_day: t.billing_day != null ? String(t.billing_day) : '',
+      plan_price: String(t.plan_price),
+      internal_notes: t.internal_notes ?? '',
+      owner_name: t.owner_name ?? '',
+      owner_phone: t.owner_phone ?? '',
+    })
+    setDrawerSaved(false)
+  }
+
+  async function handleDrawerSave() {
+    if (!drawerTenant) return
+    setDrawerSaving(true)
+    try {
+      await updateTenant(drawerTenant.id, {
+        plan: drawerEdit.plan,
+        billing_day: drawerEdit.billing_day ? parseInt(drawerEdit.billing_day) : undefined,
+        plan_price: drawerEdit.plan_price ? parseInt(drawerEdit.plan_price) : 0,
+        internal_notes: drawerEdit.internal_notes,
+        owner_name: drawerEdit.owner_name,
+        owner_phone: drawerEdit.owner_phone,
+      })
+      await loadTenants()
+      setDrawerSaved(true)
+      setTimeout(() => setDrawerSaved(false), 2500)
+    } finally {
+      setDrawerSaving(false)
+    }
+  }
+
   const fmt = (s: string) => new Date(s).toLocaleDateString('es-AR')
   const active = tenants.filter(t => t.is_active).length
   const totalOrders = tenants.reduce((s, t) => s + t.total_orders, 0)
+  const mrr = tenants.filter(t => t.is_active).reduce((s, t) => s + (t.plan_price || 0), 0)
 
   const css = `
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap');
@@ -76,7 +130,7 @@ export default function DashboardPage() {
     .root { min-height: 100vh; background: var(--bg); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
 
     .nav { background: rgba(12,12,12,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
-    .nav-in { max-width: 960px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .nav-in { max-width: 1100px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
     .nav-left { display: flex; align-items: center; gap: 10px; }
     .nav-logo { width: 30px; height: 30px; background: var(--ac-dim); border: 1px solid rgba(99,102,241,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
     .nav-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--txt); }
@@ -84,15 +138,16 @@ export default function DashboardPage() {
     .nav-exit { padding: 6px 12px; border-radius: 8px; font-size: 13px; color: var(--txt3); cursor: pointer; border: none; background: transparent; font-family: 'Inter', sans-serif; transition: all 0.15s; }
     .nav-exit:hover { color: #f87171; background: rgba(239,68,68,0.08); }
 
-    .body { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
+    .body { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
 
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
     .stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
     .stat-label { font-size: 11px; color: var(--txt3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
-    .stat-val { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; letter-spacing: -1px; }
+    .stat-val { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -1px; }
     .indigo { color: #818cf8; }
     .green { color: #22c55e; }
     .white { color: var(--txt); }
+    .emerald { color: #34d399; }
 
     .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
     .toolbar-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--txt); }
@@ -117,10 +172,10 @@ export default function DashboardPage() {
     .form-success { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); border-radius: 9px; padding: 9px 13px; font-size: 13px; color: #22c55e; margin-top: 12px; }
 
     .table-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
-    .table-head { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+    .table-head { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px 90px; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
     .th { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3); font-weight: 500; }
 
-    .row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px; gap: 12px; padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); align-items: center; transition: background 0.15s; }
+    .row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px 90px; gap: 12px; padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); align-items: center; transition: background 0.15s; }
     .row:last-child { border-bottom: none; }
     .row:hover { background: rgba(255,255,255,0.02); }
     .row.inactive { opacity: 0.45; }
@@ -136,6 +191,9 @@ export default function DashboardPage() {
     .toggle-off { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; background: rgba(239,68,68,0.08); color: #f87171; border: 1px solid rgba(239,68,68,0.2); cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
     .toggle-off:hover { background: rgba(239,68,68,0.12); }
 
+    .btn-detail { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; background: var(--ac-dim); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
+    .btn-detail:hover { background: rgba(99,102,241,0.18); }
+
     .empty { padding: 60px 20px; text-align: center; color: var(--txt3); font-size: 14px; }
     .empty-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.3; }
 
@@ -143,12 +201,62 @@ export default function DashboardPage() {
     .ring { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--ac); border-radius: 50%; animation: spin 0.65s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg) } }
 
-    @media (max-width: 640px) {
+    /* ── Drawer ── */
+    .drw-ov { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+    .drw { position: fixed; top: 0; right: 0; bottom: 0; z-index: 101; width: 440px; max-width: 100vw; background: var(--bg2); border-left: 1px solid var(--border); display: flex; flex-direction: column; animation: sldin .22s ease; overflow: hidden; }
+    @keyframes sldin { from { transform: translateX(100%) } to { transform: translateX(0) } }
+
+    .drw-header { padding: 20px 22px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; }
+    .drw-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; color: var(--txt); }
+    .drw-slug { font-size: 12px; color: var(--txt3); margin-top: 3px; }
+    .drw-close { background: none; border: none; color: var(--txt3); font-size: 18px; cursor: pointer; padding: 2px 6px; border-radius: 6px; transition: all 0.15s; line-height: 1; }
+    .drw-close:hover { color: var(--txt); background: rgba(255,255,255,0.06); }
+
+    .drw-body { flex: 1; overflow-y: auto; padding: 20px 22px; display: flex; flex-direction: column; gap: 20px; }
+    .drw-body::-webkit-scrollbar { width: 4px; }
+    .drw-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .drw-section { display: flex; flex-direction: column; gap: 12px; }
+    .drw-section-title { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--txt3); padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+    .drw-links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .drw-link { display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: 9px; font-size: 12px; font-weight: 500; text-decoration: none; transition: all 0.15s; border: 1px solid var(--border); color: var(--txt2); background: var(--bg3); cursor: pointer; }
+    .drw-link:hover { color: var(--txt); border-color: var(--border2); }
+
+    .drw-info-row { display: flex; justify-content: space-between; align-items: center; }
+    .drw-info-label { font-size: 12px; color: var(--txt3); }
+    .drw-info-val { font-size: 13px; color: var(--txt2); font-weight: 500; }
+
+    .drw-field { display: flex; flex-direction: column; gap: 5px; }
+    .drw-field-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3); }
+    .drw-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px; font-size: 13px; color: var(--txt); font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.15s; width: 100%; }
+    .drw-input:focus { border-color: rgba(99,102,241,0.4); }
+    .drw-input::placeholder { color: var(--txt3); }
+    .drw-select { background: var(--bg3); border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px; font-size: 13px; color: var(--txt); font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.15s; width: 100%; cursor: pointer; }
+    .drw-select:focus { border-color: rgba(99,102,241,0.4); }
+    .drw-textarea { background: var(--bg3); border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px; font-size: 13px; color: var(--txt); font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.15s; width: 100%; resize: vertical; min-height: 80px; }
+    .drw-textarea:focus { border-color: rgba(99,102,241,0.4); }
+    .drw-textarea::placeholder { color: var(--txt3); }
+    .drw-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .drw-mrr { background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.15); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; }
+    .drw-mrr-label { font-size: 11px; color: rgba(52,211,153,0.7); text-transform: uppercase; letter-spacing: 0.06em; }
+    .drw-mrr-val { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: #34d399; }
+
+    .drw-footer { padding: 16px 22px; border-top: 1px solid var(--border); flex-shrink: 0; }
+    .drw-save { width: 100%; background: var(--ac); color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 600; font-family: 'Syne', sans-serif; cursor: pointer; transition: all 0.15s; }
+    .drw-save:hover { filter: brightness(1.1); }
+    .drw-save:disabled { opacity: 0.5; cursor: not-allowed; }
+    .drw-saved { background: rgba(34,197,94,0.12); color: #22c55e; border: 1px solid rgba(34,197,94,0.2); width: 100%; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 600; font-family: 'Syne', sans-serif; text-align: center; }
+
+    @media (max-width: 900px) {
       .stats { grid-template-columns: repeat(2, 1fr); }
-      .stat:last-child { grid-column: span 2; }
-      .form-grid { grid-template-columns: 1fr; }
       .table-head { display: none; }
       .row { grid-template-columns: 1fr auto; grid-template-rows: auto auto; }
+      .drw { width: 100vw; }
+    }
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
     }
   `
 
@@ -168,7 +276,7 @@ export default function DashboardPage() {
             <div className="nav-left">
               <div className="nav-logo">⚡</div>
               <span className="nav-title">Super Admin</span>
-              <span className="nav-badge">RestauranteSaaS</span>
+              <span className="nav-badge">Trayly</span>
             </div>
             <button className="nav-exit" onClick={() => { removeToken(); router.push('/') }}>Salir</button>
           </div>
@@ -187,6 +295,10 @@ export default function DashboardPage() {
             <div className="stat">
               <p className="stat-label">Total clientes</p>
               <p className="stat-val white">{tenants.length}</p>
+            </div>
+            <div className="stat">
+              <p className="stat-label">MRR</p>
+              <p className="stat-val emerald">${mrr.toLocaleString('es-AR')}</p>
             </div>
           </div>
 
@@ -240,6 +352,7 @@ export default function DashboardPage() {
               <span className="th">Pedidos</span>
               <span className="th">Creado</span>
               <span className="th">Estado</span>
+              <span className="th">Detalle</span>
             </div>
             {tenants.length === 0 ? (
               <div className="empty">
@@ -261,11 +374,126 @@ export default function DashboardPage() {
                 >
                   {t.is_active ? 'Activo' : 'Inactivo'}
                 </button>
+                <button className="btn-detail" onClick={() => openDrawer(t)}>
+                  Ver detalle
+                </button>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {drawerTenant && (
+        <>
+          <div className="drw-ov" onClick={() => setDrawerTenant(null)} />
+          <div className="drw">
+            <div className="drw-header">
+              <div>
+                <p className="drw-title">{drawerTenant.name}</p>
+                <p className="drw-slug">/{drawerTenant.slug}</p>
+              </div>
+              <button className="drw-close" onClick={() => setDrawerTenant(null)}>✕</button>
+            </div>
+
+            <div className="drw-body">
+
+              {/* Info del restaurante */}
+              <div className="drw-section">
+                <p className="drw-section-title">Restaurante</p>
+                <div className="drw-links">
+                  <a className="drw-link" href={`https://trayly.com.ar/${drawerTenant.slug}`} target="_blank" rel="noreferrer">
+                    🌐 Ver menú
+                  </a>
+                  <a className="drw-link" href="https://admin.trayly.com.ar" target="_blank" rel="noreferrer">
+                    ⚙️ Panel admin
+                  </a>
+                </div>
+                <div className="drw-info-row">
+                  <span className="drw-info-label">Estado</span>
+                  <span className="drw-info-val" style={{ color: drawerTenant.is_active ? '#22c55e' : '#f87171' }}>
+                    {drawerTenant.is_active ? 'Activo' : 'Inactivo'}
+                  </span>
+                </div>
+                <div className="drw-info-row">
+                  <span className="drw-info-label">Alta</span>
+                  <span className="drw-info-val">{fmt(drawerTenant.created_at)}</span>
+                </div>
+                <div className="drw-info-row">
+                  <span className="drw-info-label">Pedidos totales</span>
+                  <span className="drw-info-val">{drawerTenant.total_orders}</span>
+                </div>
+                <div className="drw-field">
+                  <label className="drw-field-label">Plan</label>
+                  <select className="drw-select" value={drawerEdit.plan} onChange={e => setDrawerEdit({ ...drawerEdit, plan: e.target.value })}>
+                    <option value="free">Free</option>
+                    <option value="starter">Starter</option>
+                    <option value="pro">Pro</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Datos del dueño */}
+              <div className="drw-section">
+                <p className="drw-section-title">Dueño</p>
+                <div className="drw-info-row">
+                  <span className="drw-info-label">Email</span>
+                  <span className="drw-info-val">{drawerTenant.owner_email ?? '—'}</span>
+                </div>
+                <div className="drw-field">
+                  <label className="drw-field-label">Nombre</label>
+                  <input className="drw-input" placeholder="Nombre completo" value={drawerEdit.owner_name} onChange={e => setDrawerEdit({ ...drawerEdit, owner_name: e.target.value })} />
+                </div>
+                <div className="drw-field">
+                  <label className="drw-field-label">Teléfono</label>
+                  <input className="drw-input" placeholder="+54 9 11 ..." value={drawerEdit.owner_phone} onChange={e => setDrawerEdit({ ...drawerEdit, owner_phone: e.target.value })} />
+                </div>
+              </div>
+
+              {/* Facturación */}
+              <div className="drw-section">
+                <p className="drw-section-title">Facturación</p>
+                <div className="drw-row2">
+                  <div className="drw-field">
+                    <label className="drw-field-label">Día de cobro</label>
+                    <input className="drw-input" type="number" min="1" max="31" placeholder="Ej: 5" value={drawerEdit.billing_day} onChange={e => setDrawerEdit({ ...drawerEdit, billing_day: e.target.value })} />
+                  </div>
+                  <div className="drw-field">
+                    <label className="drw-field-label">Precio del plan ($)</label>
+                    <input className="drw-input" type="number" min="0" placeholder="0" value={drawerEdit.plan_price} onChange={e => setDrawerEdit({ ...drawerEdit, plan_price: e.target.value })} />
+                  </div>
+                </div>
+                <div className="drw-mrr">
+                  <span className="drw-mrr-label">MRR este cliente</span>
+                  <span className="drw-mrr-val">${(parseInt(drawerEdit.plan_price) || 0).toLocaleString('es-AR')}</span>
+                </div>
+              </div>
+
+              {/* Notas internas */}
+              <div className="drw-section">
+                <p className="drw-section-title">Notas internas</p>
+                <textarea
+                  className="drw-textarea"
+                  placeholder="Notas internas sobre este cliente..."
+                  value={drawerEdit.internal_notes}
+                  onChange={e => setDrawerEdit({ ...drawerEdit, internal_notes: e.target.value })}
+                />
+              </div>
+
+            </div>
+
+            <div className="drw-footer">
+              {drawerSaved
+                ? <div className="drw-saved">✓ Cambios guardados</div>
+                : (
+                  <button className="drw-save" onClick={handleDrawerSave} disabled={drawerSaving}>
+                    {drawerSaving ? 'Guardando...' : 'Guardar cambios'}
+                  </button>
+                )
+              }
+            </div>
+          </div>
+        </>
+      )}
     </>
   )
 }
