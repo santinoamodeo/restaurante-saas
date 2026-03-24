@@ -5,7 +5,10 @@
       "Bash(python -c \":*)",
       "Bash(python3 -c \":*)",
       "Bash(xxd \"C:\\\\Users\\\\samodeo\\\\Desktop\\\\restaurante-saas\\\\backend\\\\requirements.txt\")",
-      "Bash(powershell -Command \"Add-Content -Path 'C:\\\\Users\\\\samodeo\\\\Desktop\\\\restaurante-saas\\\\backend\\\\requirements.txt' -Value 'resend' -Encoding Unicode\")"
+      "Bash(powershell -Command \"Add-Content -Path 'C:\\\\Users\\\\samodeo\\\\Desktop\\\\restaurante-saas\\\\backend\\\\requirements.txt' -Value 'resend' -Encoding Unicode\")",
+      "Bash(powershell -Command \"Get-Content 'C:\\\\Users\\\\samodeo\\\\Desktop\\\\restaurante-saas\\\\backend\\\\requirements.txt'\")",
+      "Bash(powershell -Command \"Add-Content -Path 'C:\\\\Users\\\\samodeo\\\\Desktop\\\\restaurante-saas\\\\backend\\\\requirements.txt' -Value 'fastapi' -Encoding Unicode; Add-Content -Path 'C:\\\\Users\\\\samodeo\\\\Desktop\\\\restaurante-saas\\\\backend\\\\requirements.txt' -Value 'uvicorn' -Encoding Unicode\")",
+      "Bash(powershell -Command \"Get-Content 'C:\\\\Users\\\\samodeo\\\\Desktop\\\\restaurante-saas\\\\backend\\\\requirements.txt' | Select-String -Pattern 'fastapi|uvicorn'\")"
     ]
   }
 }
