@@ -64,7 +64,7 @@ async def get_general_qr(tenant_slug: str):
 
 @router.get("/public/{tenant_slug}/qr/{table_number}")
 async def get_table_qr(tenant_slug: str, table_number: str):
-    url = f"https://restaurante-saas-alpha.vercel.app/{tenant_slug}?mesa={table_number}"
+    url = f"https://trayly.com.ar/{tenant_slug}?mesa={table_number}"
     img = qrcode.make(url)
     buf = io.BytesIO()
     img.save(buf, format="PNG")
