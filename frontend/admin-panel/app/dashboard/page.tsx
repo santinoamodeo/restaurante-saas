@@ -329,6 +329,17 @@ export default function DashboardPage() {
       border: 1px dashed var(--border); border-radius: 14px;
     }
 
+    .D-group-sep {
+      display: flex; align-items: center; gap: 8px;
+      padding: 2px 0 4px;
+      font-size: 10px; font-weight: 600; color: var(--txt3);
+      font-family: 'Inter', sans-serif; letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .D-group-sep::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
     .D-order {
       background: var(--bg2); border: 1px solid var(--border);
       border-radius: 16px; overflow: hidden;
@@ -515,6 +526,20 @@ export default function DashboardPage() {
     )
   }
 
+  function renderGrouped(list: Order[]) {
+    const mesa = list.filter(o => o.table_number)
+    const llevar = list.filter(o => !o.table_number)
+    const mixed = mesa.length > 0 && llevar.length > 0
+    return (
+      <>
+        {mixed && <div className="D-group-sep">🪑 En mesa</div>}
+        {mesa.map(o => <OrderCard key={o.id} order={o} />)}
+        {mixed && <div className="D-group-sep">🛍️ Para llevar</div>}
+        {llevar.map(o => <OrderCard key={o.id} order={o} />)}
+      </>
+    )
+  }
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
@@ -571,7 +596,7 @@ export default function DashboardPage() {
               </div>
               {nuevos.length === 0
                 ? <div className="D-col-empty">Sin pedidos nuevos</div>
-                : nuevos.map(o => <OrderCard key={o.id} order={o} />)
+                : renderGrouped(nuevos)
               }
             </div>
 
@@ -586,7 +611,7 @@ export default function DashboardPage() {
               </div>
               {enCocina.length === 0
                 ? <div className="D-col-empty">Cocina libre</div>
-                : enCocina.map(o => <OrderCard key={o.id} order={o} />)
+                : renderGrouped(enCocina)
               }
             </div>
 
@@ -601,14 +626,17 @@ export default function DashboardPage() {
               </div>
               {listos.length === 0
                 ? <div className="D-col-empty">Nada listo aún</div>
-                : listos.map(o => <OrderCard key={o.id} order={o} />)
+                : renderGrouped(listos)
               }
             </div>
 
             {/* Historial */}
             <div className="D-col">
               <div className="D-col-head">
-                <span className="D-col-title">Historial</span>
+                <div className="D-col-head-main">
+                  <span className="D-col-title">Historial</span>
+                  {historial.length > 0 && <span className="D-col-sub">{mesaCount(historial)} en mesa · {historial.length - mesaCount(historial)} para llevar</span>}
+                </div>
                 {historial.length > 0 && <span className="D-col-badge dim">{historial.length}</span>}
                 <button className="D-col-toggle" onClick={() => setHistorialOpen(v => !v)}>
                   {historialOpen ? '▲ ocultar' : '▼ ver'}
@@ -617,7 +645,7 @@ export default function DashboardPage() {
               {historialOpen && (
                 historial.length === 0
                   ? <div className="D-col-empty">Sin historial</div>
-                  : historial.map(o => <OrderCard key={o.id} order={o} />)
+                  : renderGrouped(historial)
               )}
             </div>
 

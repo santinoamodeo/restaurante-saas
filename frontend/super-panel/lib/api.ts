@@ -34,3 +34,15 @@ export async function toggleTenant(id: string) {
   const res = await api.patch(`/api/v1/superadmin/tenants/${id}/toggle`)
   return res.data
 }
+
+export async function updateTenant(id: string, data: {
+  plan?: string
+  billing_day?: number | null
+  plan_price?: number
+  internal_notes?: string
+  owner_name?: string
+  owner_phone?: string
+}) {
+  const res = await api.patch(`/api/v1/superadmin/tenants/${id}`, data)
+  return res.data
+}

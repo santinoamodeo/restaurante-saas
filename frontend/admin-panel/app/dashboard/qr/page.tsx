@@ -16,6 +16,7 @@ export default function QRPage() {
   const [hasta, setHasta] = useState('10')
   const [multi, setMulti] = useState(false)
   const [previewMesa, setPreviewMesa] = useState<string | null>(null)
+  const [generalQrVisible, setGeneralQrVisible] = useState(false)
 
   useEffect(() => {
     const token = getToken()
@@ -28,6 +29,33 @@ export default function QRPage() {
 
   function qrUrl(table: string | number) {
     return `${API_URL}/api/v1/public/${slug}/qr/${table}`
+  }
+
+  function generalQrUrl() {
+    return `${API_URL}/api/v1/public/${slug}/qr/general`
+  }
+
+  function handleDownloadGeneral() {
+    const a = document.createElement('a')
+    a.href = generalQrUrl()
+    a.download = `qr-general-${slug}.png`
+    a.click()
+  }
+
+  function handlePrintGeneral() {
+    const win = window.open('', '_blank')
+    if (!win) return
+    win.document.write(`
+      <html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#fff;">
+        <div style="text-align:center;font-family:sans-serif;">
+          <img src="${generalQrUrl()}" style="width:260px;height:260px;" />
+          <p style="margin-top:12px;font-size:18px;font-weight:bold;">${slug}</p>
+        </div>
+      </body></html>
+    `)
+    win.document.close()
+    win.focus()
+    win.print()
   }
 
   function handleSingle() {
@@ -230,6 +258,34 @@ export default function QRPage() {
         <div className="Q-body">
           <p className="Q-heading">Códigos QR</p>
           <p className="Q-sub">Generá QRs por mesa para que los clientes accedan al menú directamente.</p>
+
+          {/* QR General */}
+          <div className="Q-card">
+            <p className="Q-card-title">QR General del restaurante</p>
+            <p style={{ fontSize: '13px', color: 'var(--txt2)', marginBottom: '16px' }}>
+              Para flyers, Instagram o cualquier material. Lleva directamente al menú sin número de mesa.
+            </p>
+            <button className="Q-btn primary" onClick={() => setGeneralQrVisible(true)}>
+              Generar QR general
+            </button>
+
+            {generalQrVisible && (
+              <div className="Q-preview">
+                <div className="Q-img-wrap">
+                  <img src={generalQrUrl()} alt="QR General" />
+                  <span className="Q-img-label">{slug}</span>
+                </div>
+                <div className="Q-preview-actions">
+                  <button className="Q-btn primary" onClick={handleDownloadGeneral}>
+                    ↓ Descargar PNG
+                  </button>
+                  <button className="Q-btn secondary" onClick={handlePrintGeneral}>
+                    🖨 Imprimir
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* QR individual */}
           <div className="Q-card">

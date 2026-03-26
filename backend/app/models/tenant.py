@@ -1,12 +1,9 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Boolean, DateTime, Enum as SAEnum
+from sqlalchemy import String, Boolean, DateTime, Enum as SAEnum, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 import enum
-import pytz
-
-BA_TZ = pytz.timezone('America/Argentina/Buenos_Aires')
 
 class PlanType(str, enum.Enum):
     free = "free"
@@ -28,4 +25,7 @@ class Tenant(Base):
     logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     bank_info: Mapped[str | None] = mapped_column(String(300), nullable=True)
     address: Mapped[str | None] = mapped_column(String(400), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(BA_TZ))
+    billing_day: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    internal_notes: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    plan_price: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

@@ -1,9 +1,21 @@
+import asyncio
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1 import auth, setup, menu, orders, config, superadmin
+from app.services.monitor_service import run_monitor
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    task = asyncio.create_task(run_monitor())
+    yield
+    task.cancel()
+
 
 app = FastAPI(
+    lifespan=lifespan,
     title=settings.APP_NAME,
     debug=settings.DEBUG,
     docs_url="/docs" if settings.DEBUG else None,
@@ -19,6 +31,7 @@ app.add_middleware(
         "https://admin.trayly.com.ar",
         "https://restaurante-saas-alpha.vercel.app",
         "https://restaurante-saas-admin.vercel.app",
+        "https://restaurante-saas-super.vercel.app",
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:3002",

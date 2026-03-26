@@ -54,9 +54,17 @@ async def get_public_order(
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
     return order
 
+@router.get("/public/{tenant_slug}/qr/general")
+async def get_general_qr(tenant_slug: str):
+    url = f"https://trayly.com.ar/{tenant_slug}"
+    img = qrcode.make(url)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return Response(content=buf.getvalue(), media_type="image/png")
+
 @router.get("/public/{tenant_slug}/qr/{table_number}")
 async def get_table_qr(tenant_slug: str, table_number: str):
-    url = f"https://restaurante-saas-alpha.vercel.app/{tenant_slug}?mesa={table_number}"
+    url = f"https://trayly.com.ar/{tenant_slug}?mesa={table_number}"
     img = qrcode.make(url)
     buf = io.BytesIO()
     img.save(buf, format="PNG")
