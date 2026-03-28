@@ -104,3 +104,14 @@ pending → confirmed → preparing → ready → delivered
 - Dominio personalizado por cliente
 - Automatizar migraciones de Neon en deploy
 - Mover super panel a `super.trayly.com.ar`
+
+---
+
+## Reglas de trabajo — siempre aplicar
+
+Al terminar CUALQUIER tarea:
+1. Marcá la tarea como completada en ROADMAP.md ([ ] → [x])
+2. Commiteá ROADMAP.md junto con los cambios del código
+3. El mensaje de commit debe seguir conventional commits
+
+No preguntes si hacerlo. Hacelo siempre.
